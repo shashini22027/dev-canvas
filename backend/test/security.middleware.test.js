@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
-import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage } from '../src/middleware/security.middleware.js';
+import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig } from '../src/middleware/security.middleware.js';
 
 const createResponse = () => {
   const response = {
@@ -117,4 +117,14 @@ test('blocks repeated requests after the rate limit is exceeded', () => {
 test('hides internal error details from client responses', () => {
   assert.equal(getSafeErrorMessage(500, new Error('MongoDB connection lost')), 'Internal server error');
   assert.equal(getSafeErrorMessage(400, new Error('Bad request details')), 'Bad request details');
+});
+
+test('enforces secure default headers for the application', () => {
+  const config = getSecurityHeadersConfig();
+
+  assert.equal(config.hidePoweredBy, true);
+  assert.equal(config.frameguard.action, 'deny');
+  assert.equal(config.noSniff, true);
+  assert.equal(config.hsts.maxAge, 31536000);
+  assert.equal(config.referrerPolicy.policy, 'strict-origin-when-cross-origin');
 });

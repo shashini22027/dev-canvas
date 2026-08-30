@@ -83,6 +83,35 @@ export const getSafeErrorMessage = (statusCode, error) => {
   return message;
 };
 
+export const getSecurityHeadersConfig = () => ({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com'],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'", process.env.CLIENT_URL || 'http://localhost:5173'],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"],
+    },
+  },
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+  crossOriginResourcePolicy: { policy: 'same-origin' },
+  dnsPrefetchControl: true,
+  frameguard: { action: 'deny' },
+  hidePoweredBy: true,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  ieNoOpen: true,
+  noSniff: true,
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  xssFilter: false,
+});
+
 export const auditLog = (action) => (req, res, next) => {
   const userId = req.user?.id || 'anonymous';
   console.info(`[audit] action=${action} user=${userId} method=${req.method} path=${req.originalUrl}`);
