@@ -5,17 +5,42 @@ import cloudinary from '../lib/cloudinary.js';
 const PROJECT_CATEGORIES = ['Web Application', 'Mobile Application', 'AI / Machine Learning', 'Data Science', 'IoT', 'Cyber Security', 'Other'];
 const PROJECT_TYPES = ['Individual', 'Team Project'];
 
-const cleanString = (value, maxLength = 300) => {
+const sanitizeText = (value, maxLength = 300) => {
     if (typeof value !== 'string') return '';
-    return value.trim().slice(0, maxLength);
+
+    const withoutTags = value
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<[^>]+>/g, '');
+
+    const normalized = withoutTags
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    return normalized.slice(0, maxLength);
+};
+
+const sanitizeUrl = (value, maxLength = 300) => {
+    if (typeof value !== 'string') return '';
+
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+
+    const normalized = trimToSafeUrl(trimmed);
+    return normalized.slice(0, maxLength);
+};
+
+const trimToSafeUrl = (value) => {
+    if (!/^https?:\/\//i.test(value)) return '';
+    return value.replace(/[\u0000-\u001F\u007F<>"'\\]/g, '').trim();
 };
 
 const parseProjectPayload = (projectData) => {
-    const title = cleanString(projectData.title, 100);
-    const description = cleanString(projectData.description, 2000);
-    const category = cleanString(projectData.category, 80);
-    const projectType = cleanString(projectData.projectType, 40);
-    const specialComments = cleanString(projectData.specialComments, 1000);
+    const title = sanitizeText(projectData.title, 100);
+    const description = sanitizeText(projectData.description, 2000);
+    const category = sanitizeText(projectData.category, 80);
+    const projectType = sanitizeText(projectData.projectType, 40);
+    const specialComments = sanitizeText(projectData.specialComments, 1000);
     const teamMemberCount = Number(projectData.teamMemberCount);
     const submissionDate = projectData.submissionDate ? new Date(projectData.submissionDate) : new Date();
 
@@ -65,17 +90,21 @@ export const createProject = async (projectData, files, user) => {
 
     let tagsArray = [];
     if (projectData.tags) {
-        tagsArray = typeof projectData.tags === 'string'
-            ? projectData.tags.split(',').map((t) => t.trim()).filter(Boolean)
+        const rawTags = typeof projectData.tags === 'string'
+            ? projectData.tags.split(',')
             : projectData.tags;
+
+        tagsArray = rawTags
+            .map((tag) => sanitizeText(tag, 40))
+            .filter(Boolean);
     }
 
     const payload = parseProjectPayload(projectData);
 
     const project = new Project({
         ...payload,
-        githubUrl: cleanString(projectData.githubUrl, 300),
-        demoUrl: cleanString(projectData.demoUrl, 300),
+        githubUrl: sanitizeUrl(projectData.githubUrl, 300),
+        demoUrl: sanitizeUrl(projectData.demoUrl, 300),
         tags: tagsArray,
         studentId: user.id,
         coverImage: coverImageUrl,
@@ -168,12 +197,16 @@ export const updateProject = async (projectId, updateData, files, userId) => {
         if (Number.isNaN(date.getTime())) throw new Error('Invalid submission date');
         project.submissionDate = date;
     }
-    if (specialComments !== undefined) project.specialComments = cleanString(specialComments, 1000);
+    if (specialComments !== undefined) project.specialComments = sanitizeText(specialComments, 1000);
     if (tags !== undefined) {
-        project.tags = typeof tags === 'string'
-            ? tags.split(',').map((t) => t.trim()).filter(Boolean)
-            : tags;
+        const rawTags = typeof tags === 'string' ? tags.split(',') : tags;
+        project.tags = rawTags
+            .map((tag) => sanitizeText(tag, 40))
+            .filter(Boolean);
     }
+
+    if (githubUrl !== undefined) project.githubUrl = sanitizeUrl(githubUrl, 300);
+    if (demoUrl !== undefined) project.demoUrl = sanitizeUrl(demoUrl, 300);
 
     await project.save();
     return project;
