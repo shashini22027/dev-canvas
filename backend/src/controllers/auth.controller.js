@@ -2,6 +2,7 @@
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import User from '../models/User.js'
+import { isOidcConfigured, verifyOidcToken } from '../lib/oidc.js'
 
 const getAdminEmails = () => (
     (process.env.ADMIN_EMAILS || '')
@@ -140,7 +141,9 @@ export const handleAsgardeoCallback = async (req, res, next) => {
         }
 
         const tokens = await tokenResponse.json()
-        const idTokenClaims = decodeJwtPayload(tokens.id_token)
+        const idTokenClaims = isOidcConfigured()
+            ? await verifyOidcToken(tokens.id_token)
+            : decodeJwtPayload(tokens.id_token)
         let userInfoClaims = {}
 
         if (!idTokenClaims.email && tokens.access_token) {

@@ -289,7 +289,7 @@ OIDC_AUDIENCE=your_asgardeo_client_id
 OIDC_JWKS_URI=https://api.asgardeo.io/t/your_org_name/oauth2/jwks
 ```
 
-`OIDC_AUDIENCE` is the Asgardeo application's client ID. The backend validates Asgardeo JWTs using issuer, audience, expiry, algorithm, and JWKS signature checks.
+`OIDC_AUDIENCE` is the Asgardeo application's client ID. The backend validates Asgardeo JWTs using issuer, audience, expiry, algorithm, and JWKS signature checks before user data is trusted.
 
 ## Admin Login
 

@@ -75,8 +75,9 @@ export const verifyOidcToken = async (token) => {
   return {
     id: payload.sub,
     oidcSub: payload.sub,
-    email: payload.email,
-    username: payload.preferred_username || payload.email?.split('@')[0] || payload.sub,
+    sub: payload.sub,
+    email: payload.email || payload.emailAddress || payload.emailaddress || payload['http://wso2.org/claims/emailaddress'] || payload['http://wso2.org/claims/email'],
+    username: payload.preferred_username || payload.username || payload.email?.split('@')[0] || payload.sub,
     name: payload.name || payload.email || payload.sub,
     role: payload.role || payload['https://devcanvas.example/role'] || 'STUDENT',
     tokenType: 'oidc',
