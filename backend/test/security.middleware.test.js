@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
-import { rejectNoSqlOperators } from '../src/middleware/security.middleware.js';
+import { rejectNoSqlOperators, limitRequestBody } from '../src/middleware/security.middleware.js';
 
 const createResponse = () => {
   const response = {
@@ -71,4 +71,23 @@ test('rejects NoSQL operator keys in request body', () => {
   assert.equal(nextCalled, false);
   assert.equal(res.statusCode, 400);
   assert.equal(res.body.message, 'Invalid request payload');
+});
+
+test('rejects oversized request bodies even when content-length is missing', () => {
+  const req = {
+    headers: {},
+    body: {
+      data: 'x'.repeat(2 * 1024 * 1024),
+    },
+  };
+  const res = createResponse();
+  let nextCalled = false;
+
+  limitRequestBody(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, false);
+  assert.equal(res.statusCode, 413);
+  assert.equal(res.body.message, 'Request payload too large');
 });

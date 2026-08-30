@@ -1,4 +1,5 @@
 const dangerousKeyPattern = /^\$/;
+const MAX_BODY_SIZE_BYTES = 1024 * 1024;
 
 const hasDangerousKey = (value) => {
   if (!value || typeof value !== 'object') return false;
@@ -6,6 +7,25 @@ const hasDangerousKey = (value) => {
   return Object.entries(value).some(([key, nestedValue]) => (
     dangerousKeyPattern.test(key) || key.includes('.') || hasDangerousKey(nestedValue)
   ));
+};
+
+export const limitRequestBody = (req, res, next) => {
+  const lengthHeader = req.headers['content-length'];
+  const declaredLength = Number.parseInt(lengthHeader ?? '', 10);
+
+  const bodySize = (() => {
+    if (typeof req.body === 'string') return Buffer.byteLength(req.body);
+    if (req.body && typeof req.body === 'object') return Buffer.byteLength(JSON.stringify(req.body));
+    return 0;
+  })();
+
+  const effectiveLength = Number.isFinite(declaredLength) ? Math.max(declaredLength, bodySize) : bodySize;
+
+  if (effectiveLength > MAX_BODY_SIZE_BYTES) {
+    return res.status(413).json({ success: false, message: 'Request payload too large' });
+  }
+
+  next();
 };
 
 export const rejectNoSqlOperators = (req, res, next) => {

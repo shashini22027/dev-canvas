@@ -13,7 +13,7 @@ import likeRoutes from './routes/like.routes.js'
 import followRoutes from './routes/follow.routes.js'
 import notificationRoutes from "./routes/notification.routes.js";
 import userRoutes from './routes/user.routes.js';
-import { rejectNoSqlOperators, requireHttps } from './middleware/security.middleware.js';
+import { rejectNoSqlOperators, requireHttps, limitRequestBody } from './middleware/security.middleware.js';
 import "./events/listners.js"; // register all event listeners
 
 
@@ -25,7 +25,9 @@ app.use(helmet())
 app.use(morgan('dev'))
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
 app.use(cookieParser())
-app.use(express.json())
+app.use(limitRequestBody)
+app.use(express.json({ limit: '1mb' }))
+app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 app.use(rejectNoSqlOperators)
 app.use(passport.initialize())
 
