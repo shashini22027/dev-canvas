@@ -102,6 +102,12 @@ export const getProjects = async (userId) => {
         .populate('studentId', 'name email profilePic');
 };
 
+export const getAuthenticatedUserProjects = async (userId) => {
+    return await Project.find({ studentId: userId })
+        .sort({ createdAt: -1 })
+        .populate('studentId', 'name email profilePic username');
+};
+
 export const getProjectById = async (projectId) => {
     const project = await Project.findById(projectId).populate('studentId', 'name email profilePic');
     if (!project) throw new Error('Project not found');

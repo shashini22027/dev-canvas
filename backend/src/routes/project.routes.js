@@ -4,11 +4,13 @@ import multer from 'multer';
 import {
   createProject,
   getProjects,
+  getMyProjects,
   getProjectById,
   updateProject,
   deleteProject,
 } from '../controllers/project.controller.js';
 import authMiddleware from '../middleware/auth.middleware.js';
+import roleMiddleware from '../middleware/role.middleware.js';
 import { auditLog } from '../middleware/security.middleware.js';
 import { csrfProtection } from '../middleware/csrf.middleware.js';
 
@@ -32,8 +34,9 @@ const projectUpload = upload.fields([
 
 const router = express.Router();
 
-router.post('/', authMiddleware, csrfProtection, auditLog('project.create'), projectUpload, createProject);
+router.post('/', authMiddleware, roleMiddleware('STUDENT'), csrfProtection, auditLog('project.create'), projectUpload, createProject);
 router.get('/', getProjects);
+router.get('/me', authMiddleware, roleMiddleware('STUDENT'), getMyProjects);
 router.get('/:id', getProjectById);
 router.put('/:id', authMiddleware, csrfProtection, auditLog('project.update'), projectUpload, updateProject);
 router.delete('/:id', authMiddleware, csrfProtection, auditLog('project.delete'), deleteProject);

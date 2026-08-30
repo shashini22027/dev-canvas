@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useAuthStore from '../store/authStore';
-import { getProjects } from '../api/project.api';
+import { getMyProjects } from '../api/project.api';
 import { updateProfile } from '../api/user.api';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -43,8 +43,7 @@ const StudentProfile = () => {
   useEffect(() => {
     const fetchUserProjects = async () => {
       try {
-        const userId = user._id || user.id;
-        const response = await getProjects(userId);
+        const response = await getMyProjects();
         setProjects(response.data);
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -53,7 +52,7 @@ const StudentProfile = () => {
         setLoadingProjects(false);
       }
     };
-    if (user && (user._id || user.id)) {
+    if (user) {
       fetchUserProjects();
     }
   }, [user]);

@@ -21,6 +21,15 @@ export const getProjects = async (req, res) => {
   }
 };
 
+export const getMyProjects = async (req, res) => {
+  try {
+    const projects = await projectService.getAuthenticatedUserProjects(req.user.id);
+    res.json(projects);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const getProjectById = async (req, res) => {
   try {
     const project = await projectService.getProjectById(req.params.id);
