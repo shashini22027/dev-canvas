@@ -1,7 +1,7 @@
 // Admin dashboard to manage users and projects
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { getAllUsers, getAllProjects, deleteProject, toggleUserStatus } from '../api/admin.api';
+import { getAllUsers, getAllProjects, deleteProject, toggleUserStatus, updateProjectStatus } from '../api/admin.api';
 import useAuthStore from '../store/authStore';
 
 /* ─── Toggle User Modal ──────────────────────────────────────────── */
@@ -358,6 +358,23 @@ const AdminPage = () => {
         RECRUITER: 'bg-blue-50 text-blue-600',
     };
 
+    const statusColors = {
+        PENDING: 'bg-amber-50 text-amber-700',
+        APPROVED: 'bg-emerald-50 text-emerald-700',
+        REJECTED: 'bg-red-50 text-red-700',
+    };
+
+    const handleStatusChange = async (projectId, status) => {
+        try {
+            const response = await updateProjectStatus(projectId, status);
+            setProjects((prev) => prev.map((project) => (
+                project._id === projectId ? response.data.data : project
+            )));
+        } catch (err) {
+            setError(err?.response?.data?.message || 'Failed to update project status.');
+        }
+    };
+
     const confirmDelete = async () => {
         if (!modalTarget) return;
         setIsDeleting(true);
@@ -655,6 +672,7 @@ const AdminPage = () => {
                                         <tr className="border-b border-slate-100 bg-slate-100/50 text-slate-500 font-bold uppercase tracking-wider text-[12px]">
                                             <th className="px-6 py-4">Project</th>
                                             <th className="px-6 py-4">Author</th>
+                                            <th className="px-6 py-4">Status</th>
                                             <th className="px-6 py-4">Created</th>
                                             <th className="px-6 py-4">Last Updated</th>
                                             <th className="px-6 py-4 text-center">Actions</th>
@@ -697,13 +715,32 @@ const AdminPage = () => {
                                                         </div>
                                                     </div>
                                                 </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`inline-flex px-3 py-1 rounded-full text-[11px] font-extrabold tracking-wide ${statusColors[project.status || 'PENDING']}`}>
+                                                        {project.status || 'PENDING'}
+                                                    </span>
+                                                </td>
                                                 <td className="px-6 py-4 text-slate-400 font-medium tracking-tight text-xs">
                                                     {formatDateTime(project.createdAt)}
                                                 </td>
                                                 <td className="px-6 py-4 text-slate-400 font-medium tracking-tight text-xs">
                                                     {project.updatedAt ? formatDateTime(project.updatedAt) : 'N/A'}
                                                 </td>
-                                                <td className="px-6 py-4 flex justify-center items-center h-full min-h-[52px]">
+                                                <td className="px-6 py-4 flex justify-center items-center gap-2 h-full min-h-[52px]">
+                                                    <button
+                                                        onClick={() => handleStatusChange(project._id, 'APPROVED')}
+                                                        disabled={project.status === 'APPROVED'}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors focus:outline-none disabled:opacity-50"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleStatusChange(project._id, 'REJECTED')}
+                                                        disabled={project.status === 'REJECTED'}
+                                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors focus:outline-none disabled:opacity-50"
+                                                    >
+                                                        Reject
+                                                    </button>
                                                     <button
                                                         onClick={() => setModalTarget({ id: project._id, title: project.title })}
                                                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors focus:outline-none"

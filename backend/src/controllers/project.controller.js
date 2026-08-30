@@ -5,6 +5,9 @@ export const createProject = async (req, res) => {
     const project = await projectService.createProject(req.body, req.files, req.user);
     res.status(201).json(project);
   } catch (err) {
+    if (err.message.includes('required') || err.message.includes('Invalid') || err.message.includes('Team member')) {
+      return res.status(400).json({ message: err.message });
+    }
     res.status(500).json({ message: err.message });
   }
 };
@@ -37,6 +40,7 @@ export const updateProject = async (req, res) => {
   } catch (err) {
     if (err.message === 'Project not found') return res.status(404).json({ message: err.message });
     if (err.message === 'Unauthorized') return res.status(403).json({ message: err.message });
+    if (err.message.includes('Invalid') || err.message.includes('Team member')) return res.status(400).json({ message: err.message });
     res.status(500).json({ message: err.message });
   }
 };

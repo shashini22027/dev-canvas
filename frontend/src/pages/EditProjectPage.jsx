@@ -4,6 +4,9 @@ import { getProject, updateProject, deleteProject } from '../api/project.api';
 import { toast } from 'react-toastify';
 import useAuthStore from '../store/authStore';
 
+const projectCategories = ['Web Application', 'Mobile Application', 'AI / Machine Learning', 'Data Science', 'IoT', 'Cyber Security', 'Other'];
+const projectTypes = ['Individual', 'Team Project'];
+
 const EditProjectPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -17,7 +20,12 @@ const EditProjectPage = () => {
     description: '',
     githubUrl: '',
     demoUrl: '',
-    tags: ''
+    tags: '',
+    category: projectCategories[0],
+    projectType: projectTypes[0],
+    teamMemberCount: '1',
+    submissionDate: new Date().toISOString().slice(0, 10),
+    specialComments: ''
   });
   
   const [coverImage, setCoverImage] = useState(null);
@@ -48,7 +56,12 @@ const EditProjectPage = () => {
           description: project.description || '',
           githubUrl: project.githubUrl || '',
           demoUrl: project.demoUrl || '',
-          tags: Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || '')
+          tags: Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || ''),
+          category: project.category || projectCategories[0],
+          projectType: project.projectType || projectTypes[0],
+          teamMemberCount: String(project.teamMemberCount || 1),
+          submissionDate: project.submissionDate ? new Date(project.submissionDate).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+          specialComments: project.specialComments || ''
         });
         
         if (project.coverImage) {
@@ -114,6 +127,11 @@ const EditProjectPage = () => {
     formData.append('githubUrl', form.githubUrl);
     formData.append('demoUrl', form.demoUrl);
     formData.append('tags', form.tags);
+    formData.append('category', form.category);
+    formData.append('projectType', form.projectType);
+    formData.append('teamMemberCount', form.teamMemberCount);
+    formData.append('submissionDate', form.submissionDate);
+    formData.append('specialComments', form.specialComments);
     if (coverImage) {
       formData.append('coverImage', coverImage);
     }
@@ -273,6 +291,50 @@ const EditProjectPage = () => {
           {/* Meta Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
             <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Project Category</label>
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="w-full bg-transparent border-b border-slate-200 py-2 text-sm focus:outline-none focus:border-slate-900 transition-colors"
+              >
+                {projectCategories.map((category) => <option key={category}>{category}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Project Type</label>
+              <select
+                name="projectType"
+                value={form.projectType}
+                onChange={handleChange}
+                className="w-full bg-transparent border-b border-slate-200 py-2 text-sm focus:outline-none focus:border-slate-900 transition-colors"
+              >
+                {projectTypes.map((type) => <option key={type}>{type}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Team Members</label>
+              <input
+                type="number"
+                name="teamMemberCount"
+                min="1"
+                max="20"
+                value={form.teamMemberCount}
+                onChange={handleChange}
+                className="w-full bg-transparent border-b border-slate-200 py-2 text-sm focus:outline-none focus:border-slate-900 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Submission Date</label>
+              <input
+                type="date"
+                name="submissionDate"
+                value={form.submissionDate}
+                onChange={handleChange}
+                className="w-full bg-transparent border-b border-slate-200 py-2 text-sm focus:outline-none focus:border-slate-900 transition-colors"
+              />
+            </div>
+            <div>
               <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Tags (comma separated)</label>
               <input 
                 type="text"
@@ -303,6 +365,17 @@ const EditProjectPage = () => {
                 onChange={handleChange}
                 placeholder="https://..."
                 className="w-full bg-transparent border-b border-slate-200 py-2 text-sm focus:outline-none focus:border-slate-900 transition-colors"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Special Comments</label>
+              <textarea
+                name="specialComments"
+                value={form.specialComments}
+                onChange={handleChange}
+                rows="3"
+                placeholder="Additional notes, deployment details, or assessment comments..."
+                className="w-full bg-transparent border border-slate-200 rounded-md p-4 text-slate-700 focus:outline-none focus:border-slate-900 transition-colors resize-y leading-relaxed text-sm"
               />
             </div>
           </div>

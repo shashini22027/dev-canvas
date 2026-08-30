@@ -9,11 +9,20 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    trim: true,
+    lowercase: true
+  },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
   },
   name: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
   profilePic: {
     type: String
@@ -31,10 +40,34 @@ const userSchema = new mongoose.Schema({
     type: String
   }],
   location: {
-    type: String
+    type: String,
+    trim: true,
+    maxLength: 120
   },
   institute: {
-    type: String
+    type: String,
+    trim: true,
+    maxLength: 160
+  },
+  contactNumber: {
+    type: String,
+    trim: true,
+    maxLength: 30
+  },
+  degree: {
+    type: String,
+    trim: true,
+    maxLength: 160
+  },
+  github: {
+    type: String,
+    trim: true,
+    maxLength: 300
+  },
+  linkedin: {
+    type: String,
+    trim: true,
+    maxLength: 300
   },
   isNewUser: {
     type: Boolean,

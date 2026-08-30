@@ -2,6 +2,35 @@ import Project from '../models/Project.js';
 import eventBus from '../events/eventBus.js';
 import cloudinary from '../lib/cloudinary.js';
 
+const PROJECT_CATEGORIES = ['Web Application', 'Mobile Application', 'AI / Machine Learning', 'Data Science', 'IoT', 'Cyber Security', 'Other'];
+const PROJECT_TYPES = ['Individual', 'Team Project'];
+
+const cleanString = (value, maxLength = 300) => {
+    if (typeof value !== 'string') return '';
+    return value.trim().slice(0, maxLength);
+};
+
+const parseProjectPayload = (projectData) => {
+    const title = cleanString(projectData.title, 100);
+    const description = cleanString(projectData.description, 2000);
+    const category = cleanString(projectData.category, 80);
+    const projectType = cleanString(projectData.projectType, 40);
+    const specialComments = cleanString(projectData.specialComments, 1000);
+    const teamMemberCount = Number(projectData.teamMemberCount);
+    const submissionDate = projectData.submissionDate ? new Date(projectData.submissionDate) : new Date();
+
+    if (!title) throw new Error('Project title is required');
+    if (!description) throw new Error('Project description is required');
+    if (!PROJECT_CATEGORIES.includes(category)) throw new Error('Invalid project category');
+    if (!PROJECT_TYPES.includes(projectType)) throw new Error('Invalid project type');
+    if (!Number.isInteger(teamMemberCount) || teamMemberCount < 1 || teamMemberCount > 20) {
+        throw new Error('Team member count must be between 1 and 20');
+    }
+    if (Number.isNaN(submissionDate.getTime())) throw new Error('Invalid submission date');
+
+    return { title, description, category, projectType, teamMemberCount, submissionDate, specialComments };
+};
+
 export const uploadToCloudinary = async (buffer, folder) => {
     return new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
@@ -41,11 +70,12 @@ export const createProject = async (projectData, files, user) => {
             : projectData.tags;
     }
 
+    const payload = parseProjectPayload(projectData);
+
     const project = new Project({
-        title: projectData.title,
-        description: projectData.description,
-        githubUrl: projectData.githubUrl,
-        demoUrl: projectData.demoUrl,
+        ...payload,
+        githubUrl: cleanString(projectData.githubUrl, 300),
+        demoUrl: cleanString(projectData.demoUrl, 300),
         tags: tagsArray,
         studentId: user.id,
         coverImage: coverImageUrl,
@@ -109,11 +139,30 @@ export const updateProject = async (projectId, updateData, files, userId) => {
     }
     project.images = updatedImages;
 
-    const { title, description, githubUrl, demoUrl, tags } = updateData;
+    const { title, description, githubUrl, demoUrl, tags, category, projectType, teamMemberCount, submissionDate, specialComments } = updateData;
     if (title) project.title = title;
     if (description) project.description = description;
     if (githubUrl !== undefined) project.githubUrl = githubUrl;
     if (demoUrl !== undefined) project.demoUrl = demoUrl;
+    if (category !== undefined) {
+        if (!PROJECT_CATEGORIES.includes(category)) throw new Error('Invalid project category');
+        project.category = category;
+    }
+    if (projectType !== undefined) {
+        if (!PROJECT_TYPES.includes(projectType)) throw new Error('Invalid project type');
+        project.projectType = projectType;
+    }
+    if (teamMemberCount !== undefined) {
+        const count = Number(teamMemberCount);
+        if (!Number.isInteger(count) || count < 1 || count > 20) throw new Error('Team member count must be between 1 and 20');
+        project.teamMemberCount = count;
+    }
+    if (submissionDate !== undefined) {
+        const date = new Date(submissionDate);
+        if (Number.isNaN(date.getTime())) throw new Error('Invalid submission date');
+        project.submissionDate = date;
+    }
+    if (specialComments !== undefined) project.specialComments = cleanString(specialComments, 1000);
     if (tags !== undefined) {
         project.tags = typeof tags === 'string'
             ? tags.split(',').map((t) => t.trim()).filter(Boolean)

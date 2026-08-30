@@ -30,6 +30,21 @@ export const deleteProject = async (req, res, next) => {
     }
 };
 
+export const updateProjectStatus = async (req, res, next) => {
+    try {
+        const project = await adminService.updateProjectStatus(req.params.id, req.body.status);
+        return res.status(200).json({ success: true, message: 'Project status updated successfully', data: project });
+    } catch (err) {
+        if (err.message === 'Project not found') {
+            return res.status(404).json({ success: false, message: 'Project not found' });
+        }
+        if (err.message === 'Invalid project status') {
+            return res.status(400).json({ success: false, message: 'Invalid project status' });
+        }
+        next(err);
+    }
+};
+
 export const toggleUserStatus = async (req, res, next) => {
     try {
         const user = await adminService.toggleUserStatus(req.params.id, req.user.id);

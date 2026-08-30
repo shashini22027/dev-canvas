@@ -17,11 +17,13 @@ passport.use(
                 let user = await User.findOne({ googleId: profile.id });
 
                 if (!user) {
+                    const email = profile.emails?.[0]?.value;
                     user = await User.create({
                         googleId: profile.id,
-                        email: profile.emails[0].value,
+                        email,
+                        username: profile.username || email?.split('@')[0] || profile.id,
                         name: profile.displayName,
-                        profilePic: profile.photos[0].value,
+                        profilePic: profile.photos?.[0]?.value,
                         role: 'STUDENT',
                         isNewUser: true,
                     })

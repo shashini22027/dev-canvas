@@ -17,6 +17,24 @@ export const removeProject = async (projectId) => {
     return project;
 };
 
+export const updateProjectStatus = async (projectId, status) => {
+    if (!['PENDING', 'APPROVED', 'REJECTED'].includes(status)) {
+        throw new Error('Invalid project status');
+    }
+
+    const project = await Project.findByIdAndUpdate(
+        projectId,
+        { status },
+        { new: true, runValidators: true }
+    ).populate('studentId', 'name email profilePic username');
+
+    if (!project) {
+        throw new Error('Project not found');
+    }
+
+    return project;
+};
+
 export const toggleUserStatus = async (userId, requestUserId) => {
     const user = await User.findById(userId);
     if (!user) {

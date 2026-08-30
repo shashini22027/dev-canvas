@@ -4,6 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { createProject } from '../api/project.api';
 
+const projectCategories = ['Web Application', 'Mobile Application', 'AI / Machine Learning', 'Data Science', 'IoT', 'Cyber Security', 'Other'];
+const projectTypes = ['Individual', 'Team Project'];
+
 const animatedBgStyles = `
   @import url('https://fonts.googleapis.com/css?family=Exo:400,700');
 
@@ -66,6 +69,11 @@ export default function CreateProjectPage() {
     githubUrl: '',
     demoUrl: '',
     tags: '',
+    category: projectCategories[0],
+    projectType: projectTypes[0],
+    teamMemberCount: '1',
+    submissionDate: new Date().toISOString().slice(0, 10),
+    specialComments: '',
   });
   const [coverImage, setCoverImage] = useState(null);
   const [extraImages, setExtraImages] = useState([]);
@@ -80,6 +88,11 @@ export default function CreateProjectPage() {
     if (form.title.length > 50) e.title = 'Title must be under 50 characters';
     if (!form.description.trim()) e.description = 'Description is required';
     if (form.description.length > 300) e.description = 'Description must be under 300 characters';
+    if (!projectCategories.includes(form.category)) e.category = 'Select a valid project category';
+    if (!projectTypes.includes(form.projectType)) e.projectType = 'Select a valid project type';
+    const teamCount = Number(form.teamMemberCount);
+    if (!Number.isInteger(teamCount) || teamCount < 1 || teamCount > 20) e.teamMemberCount = 'Team member count must be between 1 and 20';
+    if (!form.submissionDate) e.submissionDate = 'Submission date is required';
     if (!coverImage) e.coverImage = 'Cover image is required';
     return e;
   };
@@ -128,6 +141,11 @@ export default function CreateProjectPage() {
     formData.append('githubUrl', form.githubUrl);
     formData.append('demoUrl', form.demoUrl);
     formData.append('tags', form.tags);
+    formData.append('category', form.category);
+    formData.append('projectType', form.projectType);
+    formData.append('teamMemberCount', form.teamMemberCount);
+    formData.append('submissionDate', form.submissionDate);
+    formData.append('specialComments', form.specialComments);
     formData.append('coverImage', coverImage);
     extraImages.forEach((file) => formData.append('extraImages', file));
 
@@ -281,6 +299,57 @@ export default function CreateProjectPage() {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="category" className="text-xs font-semibold text-slate-600">Project Category</label>
+                    <select
+                      id="category"
+                      name="category"
+                      value={form.category}
+                      onChange={handleChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm transition"
+                    >
+                      {projectCategories.map((category) => <option key={category}>{category}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="projectType" className="text-xs font-semibold text-slate-600">Project Type</label>
+                    <select
+                      id="projectType"
+                      name="projectType"
+                      value={form.projectType}
+                      onChange={handleChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm transition"
+                    >
+                      {projectTypes.map((type) => <option key={type}>{type}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="teamMemberCount" className="text-xs font-semibold text-slate-600">Team Members</label>
+                    <input
+                      id="teamMemberCount"
+                      name="teamMemberCount"
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={form.teamMemberCount}
+                      onChange={handleChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm transition"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label htmlFor="submissionDate" className="text-xs font-semibold text-slate-600">Submission Date</label>
+                    <input
+                      id="submissionDate"
+                      name="submissionDate"
+                      type="date"
+                      value={form.submissionDate}
+                      onChange={handleChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-950 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm transition"
+                    />
+                  </div>
+                </div>
+
                 {/* Row 3: Description */}
                 <div className="flex flex-col gap-1">
                   <div className="flex justify-between items-center text-xs font-semibold text-slate-600">
@@ -298,6 +367,23 @@ export default function CreateProjectPage() {
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-950 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm transition resize-none"
                   />
 
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center text-xs font-semibold text-slate-600">
+                    <label htmlFor="specialComments">Special Comments</label>
+                    <span>{form.specialComments.length} / 1000</span>
+                  </div>
+                  <textarea
+                    id="specialComments"
+                    name="specialComments"
+                    placeholder="Add deployment notes, assessment context, or special requirements..."
+                    value={form.specialComments}
+                    onChange={handleChange}
+                    maxLength={1000}
+                    rows={3}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-950 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm transition resize-none"
+                  />
                 </div>
 
                 {/* Row 4: Extra Images Gallery */}

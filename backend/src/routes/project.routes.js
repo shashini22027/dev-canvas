@@ -10,9 +10,17 @@ import {
 } from '../controllers/project.controller.js';
 import authMiddleware from '../middleware/auth.middleware.js';
 
-const upload = multer({ 
+const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!allowedImageTypes.includes(file.mimetype)) {
+      return cb(new Error('Only JPG, PNG, and WEBP images are allowed'));
+    }
+    cb(null, true);
+  },
 });
 
 const projectUpload = upload.fields([
@@ -27,6 +35,13 @@ router.get('/', getProjects);
 router.get('/:id', getProjectById);
 router.put('/:id', authMiddleware, projectUpload, updateProject);
 router.delete('/:id', authMiddleware, deleteProject);
+
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError || err.message.includes('images are allowed')) {
+    return res.status(400).json({ message: err.message });
+  }
+  next(err);
+});
 
 export default router;
 

@@ -14,7 +14,11 @@ const StudentProfile = () => {
     bio: user?.bio || '',
     technologies: Array.isArray(user?.technologies) ? user.technologies.join(', ') : '',
     location: user?.location || '',
-    institute: user?.institute || ''
+    institute: user?.institute || '',
+    contactNumber: user?.contactNumber || '',
+    degree: user?.degree || '',
+    github: user?.github || '',
+    linkedin: user?.linkedin || ''
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -24,7 +28,11 @@ const StudentProfile = () => {
         bio: user.bio || '',
         technologies: Array.isArray(user.technologies) ? user.technologies.join(', ') : '',
         location: user.location || '',
-        institute: user.institute || ''
+        institute: user.institute || '',
+        contactNumber: user.contactNumber || '',
+        degree: user.degree || '',
+        github: user.github || '',
+        linkedin: user.linkedin || ''
       });
     }
   }, [user]);
@@ -83,10 +91,21 @@ const StudentProfile = () => {
                   {user?.name || "Student Name"}
                 </h1>
                 <p className="text-slate-500 text-sm">{user?.email}</p>
+                <p className="text-slate-400 text-xs">@{user?.username || user?.email?.split('@')[0]}</p>
               </div>
             </div>
 
             <form onSubmit={handleSaveProfile} className="w-full space-y-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded-md border border-slate-200 p-4 text-xs text-slate-600">
+                <div>
+                  <span className="font-bold uppercase text-slate-800">Username</span>
+                  <p className="mt-1 break-all">{user?.username || user?.email?.split('@')[0]}</p>
+                </div>
+                <div>
+                  <span className="font-bold uppercase text-slate-800">Email</span>
+                  <p className="mt-1 break-all">{user?.email}</p>
+                </div>
+              </div>
               <div>
                 <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">Bio</label>
                 <textarea
@@ -129,6 +148,50 @@ const StudentProfile = () => {
                   onChange={handleChange}
                   className="w-full bg-transparent border-b border-slate-200 py-2 text-slate-800 focus:outline-none focus:border-slate-900 transition-colors text-sm"
                   placeholder="University Name"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">Contact Number</label>
+                <input
+                  type="tel"
+                  name="contactNumber"
+                  value={formData.contactNumber}
+                  onChange={handleChange}
+                  className="w-full bg-transparent border-b border-slate-200 py-2 text-slate-800 focus:outline-none focus:border-slate-900 transition-colors text-sm"
+                  placeholder="+94 77 123 4567"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">Degree</label>
+                <input
+                  type="text"
+                  name="degree"
+                  value={formData.degree}
+                  onChange={handleChange}
+                  className="w-full bg-transparent border-b border-slate-200 py-2 text-slate-800 focus:outline-none focus:border-slate-900 transition-colors text-sm"
+                  placeholder="BSc Software Engineering"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">GitHub</label>
+                <input
+                  type="url"
+                  name="github"
+                  value={formData.github}
+                  onChange={handleChange}
+                  className="w-full bg-transparent border-b border-slate-200 py-2 text-slate-800 focus:outline-none focus:border-slate-900 transition-colors text-sm"
+                  placeholder="https://github.com/username"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">LinkedIn</label>
+                <input
+                  type="url"
+                  name="linkedin"
+                  value={formData.linkedin}
+                  onChange={handleChange}
+                  className="w-full bg-transparent border-b border-slate-200 py-2 text-slate-800 focus:outline-none focus:border-slate-900 transition-colors text-sm"
+                  placeholder="https://linkedin.com/in/username"
                 />
               </div>
 
