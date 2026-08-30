@@ -208,7 +208,8 @@ export const handleAsgardeoCallback = async (req, res, next) => {
 
 export const logoutFromAsgardeo = (req, res) => {
     const config = getAsgardeoConfig()
-    const redirectUrl = process.env.CLIENT_URL || 'http://localhost:5173'
+    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
+    const redirectUrl = `${clientUrl.replace(/\/$/, '')}/login`
     const params = new URLSearchParams({ post_logout_redirect_uri: redirectUrl })
 
     res.redirect(`${config.logoutEndpoint}?${params.toString()}`)

@@ -14,7 +14,6 @@ const AdminProfile = () => {
     const [profilePic, setProfilePic] = useState(user?.profilePic || '');
     const [isSaving, setIsSaving] = useState(false);
     const [errorMsg, setErrorMsg] = useState(null);
-    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     const formatDate = (dateStr) =>
         new Date(dateStr).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -424,7 +423,7 @@ const AdminProfile = () => {
                             </button>
                         )}
                         <button
-                            onClick={() => setShowLogoutModal(true)}
+                            onClick={() => authService.logout()}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 8,
                                 background: '#fff', color: '#ef4444', fontSize: 13.5, fontWeight: 700,
@@ -445,52 +444,6 @@ const AdminProfile = () => {
                 )}
 
             </main>
-
-            {/* Logout Confirmation Modal */}
-            {showLogoutModal && (
-                <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-                    style={{ backdropFilter: 'blur(10px)', backgroundColor: 'rgba(8,12,30,0.55)' }}
-                >
-                    <div
-                        className="relative w-full max-w-sm rounded-3xl overflow-hidden bg-white shadow-2xl"
-                        style={{ animation: 'profileModalPop 0.28s cubic-bezier(.34,1.56,.64,1) both' }}
-                    >
-                        <div style={{ background: 'linear-gradient(90deg,#ef4444,#f43f5e,#ec4899)', height: 4 }} />
-                        <div className="p-8 flex flex-col items-center text-center gap-5">
-                            <div className="relative flex items-center justify-center">
-                                <span className="absolute inline-flex w-20 h-20 rounded-full opacity-20"
-                                    style={{ background: '#ef4444', animation: 'profileModalPop 1.6s cubic-bezier(0,0,0.2,1) infinite' }} />
-                                <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center"
-                                    style={{ background: 'linear-gradient(135deg,#fee2e2,#fecdd3)', boxShadow: '0 8px 24px rgba(239,68,68,0.22)' }}>
-                                    <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Sign Out?</h2>
-                                <p className="text-slate-500 text-sm leading-relaxed">Are you sure you want to log out of your account?</p>
-                            </div>
-                            <div className="flex gap-3 w-full mt-1">
-                                <button
-                                    onClick={() => setShowLogoutModal(false)}
-                                    className="flex-1 py-3 rounded-xl border-2 border-slate-200 bg-white text-slate-600 text-sm font-bold hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer focus:outline-none"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={() => { setShowLogoutModal(false); authService.logout(); }}
-                                    className="flex-1 py-3 rounded-xl border-none text-white text-sm font-bold cursor-pointer focus:outline-none transition-all hover:opacity-90"
-                                    style={{ background: 'linear-gradient(135deg,#ef4444 0%,#f43f5e 60%,#ec4899 100%)', boxShadow: '0 4px 18px rgba(239,68,68,0.35)' }}
-                                >
-                                    Yes, Log Out
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             <style>{`
                 @keyframes profileModalPop {
