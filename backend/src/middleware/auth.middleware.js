@@ -1,6 +1,7 @@
 // Verifies JWT from Authorization header
 import jwt from 'jsonwebtoken'
 import { isOidcConfigured, verifyOidcToken } from '../lib/oidc.js'
+import { getJwtSecret } from '../controllers/auth.controller.js'
 
 const authMiddleware = async (req, res, next) => {
     const authHeader = req.headers.authorization
@@ -17,7 +18,8 @@ const authMiddleware = async (req, res, next) => {
 
     try {
         if (process.env.JWT_SECRET) {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET)
+            const secret = getJwtSecret();
+            const decoded = jwt.verify(token, secret)
             req.user = decoded
             return next()
         }

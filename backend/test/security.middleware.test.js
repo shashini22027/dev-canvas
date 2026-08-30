@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
 import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig } from '../src/middleware/security.middleware.js';
-import { getAuthTokenFromCookie, clearAuthTokenCookie } from '../src/controllers/auth.controller.js';
+import { getAuthTokenFromCookie, clearAuthTokenCookie, getJwtSecret, logoutFromAsgardeo } from '../src/controllers/auth.controller.js';
 
 const createResponse = () => {
   const response = {
@@ -149,4 +149,35 @@ test('clears the auth token cookie during logout', () => {
   assert.equal(cookieOptions.name, 'devcanvas_auth_token');
   assert.equal(cookieOptions.options.path, '/');
   assert.equal(cookieOptions.options.httpOnly, true);
+});
+
+test('uses a local login redirect instead of an external Asgardeo logout redirect', () => {
+  const previousClientUrl = process.env.CLIENT_URL;
+  const previousLogoutEndpoint = process.env.ASGARDEO_LOGOUT_ENDPOINT;
+  process.env.CLIENT_URL = 'http://localhost:5173';
+  process.env.ASGARDEO_LOGOUT_ENDPOINT = 'https://accounts.asgardeo.io/t/mydevcanvas/authenticationendpoint/oauth2_logout.do';
+
+  let redirectUrl = null;
+  const res = {
+    clearCookie() {},
+    redirect(url) {
+      redirectUrl = url;
+    },
+  };
+
+  logoutFromAsgardeo({}, res);
+
+  assert.equal(redirectUrl, 'http://localhost:5173/login');
+
+  process.env.CLIENT_URL = previousClientUrl;
+  process.env.ASGARDEO_LOGOUT_ENDPOINT = previousLogoutEndpoint;
+});
+
+test('requires a strong JWT secret before issuing tokens', () => {
+  const previous = process.env.JWT_SECRET;
+  delete process.env.JWT_SECRET;
+
+  assert.throws(() => getJwtSecret(), /JWT_SECRET/i);
+
+  process.env.JWT_SECRET = previous;
 });

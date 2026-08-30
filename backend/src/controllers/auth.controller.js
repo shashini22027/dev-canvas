@@ -52,6 +52,15 @@ const getEmailFromClaims = (claims) => {
     return email?.toLowerCase()
 }
 
+export const getJwtSecret = () => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret || secret.length < 32) {
+        throw new Error('JWT_SECRET must be set and at least 32 characters long');
+    }
+
+    return secret;
+};
+
 const createApiToken = (user) => jwt.sign(
     {
         id: user._id,
@@ -62,7 +71,7 @@ const createApiToken = (user) => jwt.sign(
         isNewUser: user.isNewUser,
         csrfToken: crypto.randomBytes(32).toString('hex'),
     },
-    process.env.JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: '7d' }
 )
 
@@ -234,16 +243,10 @@ export const handleAsgardeoCallback = async (req, res, next) => {
 export const logoutFromAsgardeo = (req, res) => {
     clearAuthTokenCookie(res)
 
-    const config = getAsgardeoConfig()
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
     const redirectUrl = `${clientUrl.replace(/\/$/, '')}/login`
-    const params = new URLSearchParams({
-        client_id: config.clientId,
-        post_logout_redirect_uri: redirectUrl,
-        returnTo: redirectUrl,
-    })
 
-    res.redirect(`${config.logoutEndpoint}?${params.toString()}`)
+    res.redirect(redirectUrl)
 }
 
 export const handleGoogleCallback = (req, res) => {
