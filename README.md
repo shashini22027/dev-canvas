@@ -258,7 +258,7 @@ The two mandatory assessment roles are covered by `STUDENT` and `ADMIN`. `RECRUI
 Create an OIDC web application in Asgardeo and configure the authorized redirect URL:
 
 ```text
-http://localhost:5000/api/auth/asgardeo/callback
+http://localhost:3000/api/auth/asgardeo/callback
 ```
 
 Then add these values to `backend/.env`:
@@ -267,7 +267,7 @@ Then add these values to `backend/.env`:
 ASGARDEO_ORG_NAME=your_org_name
 ASGARDEO_CLIENT_ID=your_asgardeo_client_id
 ASGARDEO_CLIENT_SECRET=your_asgardeo_client_secret
-ASGARDEO_CALLBACK_URL=http://localhost:5000/api/auth/asgardeo/callback
+ASGARDEO_CALLBACK_URL=http://localhost:3000/api/auth/asgardeo/callback
 
 OIDC_ISSUER=https://api.asgardeo.io/t/your_org_name/oauth2/token
 OIDC_AUDIENCE=your_asgardeo_client_id

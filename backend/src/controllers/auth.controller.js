@@ -53,6 +53,13 @@ export const startAsgardeoLogin = (req, res) => {
     }
 
     const state = crypto.randomBytes(16).toString('hex')
+    res.cookie('asgardeo_oauth_state', state, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 10 * 60 * 1000,
+    })
+
     const params = new URLSearchParams({
         response_type: 'code',
         client_id: config.clientId,
@@ -67,10 +74,16 @@ export const startAsgardeoLogin = (req, res) => {
 export const handleAsgardeoCallback = async (req, res, next) => {
     try {
         const config = getAsgardeoConfig()
-        const { code } = req.query
+        const { code, state } = req.query
+        const storedState = req.cookies?.asgardeo_oauth_state
+        res.clearCookie('asgardeo_oauth_state')
 
         if (!code) {
             return res.redirect(`${process.env.CLIENT_URL}/login?error=Missing Asgardeo authorization code`)
+        }
+
+        if (!state || !storedState || state !== storedState) {
+            return res.redirect(`${process.env.CLIENT_URL}/login?error=Invalid Asgardeo login state`)
         }
 
         const tokenResponse = await fetch(config.tokenEndpoint, {
@@ -86,7 +99,9 @@ export const handleAsgardeoCallback = async (req, res, next) => {
         })
 
         if (!tokenResponse.ok) {
-            throw new Error('Failed to exchange Asgardeo authorization code')
+            const errorText = await tokenResponse.text()
+            console.error('Asgardeo token exchange failed:', errorText)
+            return res.redirect(`${process.env.CLIENT_URL}/login?error=Failed to complete Asgardeo login`)
         }
 
         const tokens = await tokenResponse.json()
