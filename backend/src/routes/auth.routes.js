@@ -2,7 +2,7 @@
 import express from 'express'
 import passport from 'passport'
 import authMiddleware from '../middleware/auth.middleware.js'
-import { handleGoogleCallback, selectRole, getMe, updateProfile } from '../controllers/auth.controller.js'
+import { handleGoogleCallback, selectRole, getMe, updateProfile, startAsgardeoLogin, handleAsgardeoCallback, logoutFromAsgardeo } from '../controllers/auth.controller.js'
 
 
 const router = express.Router()
@@ -17,6 +17,12 @@ router.get('/google/callback',
     passport.authenticate('google', { failureRedirect: '/login', session: false }),
     handleGoogleCallback
 )
+
+router.get('/asgardeo', startAsgardeoLogin)
+
+router.get('/asgardeo/callback', handleAsgardeoCallback)
+
+router.get('/asgardeo/logout', logoutFromAsgardeo)
 
 router.patch('/select-role', authMiddleware, selectRole)
 

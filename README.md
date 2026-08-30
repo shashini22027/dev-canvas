@@ -253,17 +253,28 @@ The two mandatory assessment roles are covered by `STUDENT` and `ADMIN`. `RECRUI
 | Upload a non-image file as a project image | `400 Bad Request` |
 | Recruiter/Admin accesses student-only project edit route | Redirect or `403 Forbidden` |
 
-## OIDC Access Token Validation
+## Asgardeo OIDC Configuration
 
-The backend can validate RS256 OIDC JWT bearer tokens from a cloud IdP using JWKS. Configure these values in `backend/.env`:
+Create an OIDC web application in Asgardeo and configure the authorized redirect URL:
 
-```env
-OIDC_ISSUER=https://accounts.google.com
-OIDC_AUDIENCE=your_oidc_client_id_or_api_audience
-OIDC_JWKS_URI=https://www.googleapis.com/oauth2/v3/certs
+```text
+http://localhost:5000/api/auth/asgardeo/callback
 ```
 
-When these values are configured, protected APIs can validate OIDC tokens using issuer, audience, expiry, algorithm, and signature checks. The existing Google login flow still issues an application JWT for the React app, and that token includes a CSRF claim used by unsafe API requests.
+Then add these values to `backend/.env`:
+
+```env
+ASGARDEO_ORG_NAME=your_org_name
+ASGARDEO_CLIENT_ID=your_asgardeo_client_id
+ASGARDEO_CLIENT_SECRET=your_asgardeo_client_secret
+ASGARDEO_CALLBACK_URL=http://localhost:5000/api/auth/asgardeo/callback
+
+OIDC_ISSUER=https://api.asgardeo.io/t/your_org_name/oauth2/token
+OIDC_AUDIENCE=your_asgardeo_client_id
+OIDC_JWKS_URI=https://api.asgardeo.io/t/your_org_name/oauth2/jwks
+```
+
+`OIDC_AUDIENCE` is the Asgardeo application's client ID. The backend validates Asgardeo JWTs using issuer, audience, expiry, algorithm, and JWKS signature checks.
 
 ## Admin Login
 
