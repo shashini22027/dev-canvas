@@ -69,6 +69,7 @@ const createApiToken = (user) => jwt.sign(
 const getAsgardeoConfig = () => {
     const orgName = process.env.ASGARDEO_ORG_NAME
     const baseUrl = process.env.ASGARDEO_BASE_URL || (orgName ? `https://api.asgardeo.io/t/${orgName}` : '')
+    const accountsBaseUrl = process.env.ASGARDEO_ACCOUNTS_BASE_URL || (orgName ? `https://accounts.asgardeo.io/t/${orgName}` : '')
 
     return {
         clientId: process.env.ASGARDEO_CLIENT_ID,
@@ -77,7 +78,7 @@ const getAsgardeoConfig = () => {
         authorizeEndpoint: process.env.ASGARDEO_AUTHORIZE_ENDPOINT || `${baseUrl}/oauth2/authorize`,
         tokenEndpoint: process.env.ASGARDEO_TOKEN_ENDPOINT || `${baseUrl}/oauth2/token`,
         userInfoEndpoint: process.env.ASGARDEO_USERINFO_ENDPOINT || `${baseUrl}/oauth2/userinfo`,
-        logoutEndpoint: process.env.ASGARDEO_LOGOUT_ENDPOINT || `${baseUrl}/oidc/logout`,
+        logoutEndpoint: process.env.ASGARDEO_LOGOUT_ENDPOINT || `${accountsBaseUrl}/authenticationendpoint/oauth2_logout.do`,
     }
 }
 
