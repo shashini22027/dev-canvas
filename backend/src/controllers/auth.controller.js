@@ -14,6 +14,7 @@ export const handleGoogleCallback = (req, res) => {
         {
             id: user._id,
             email: user.email,
+            username: user.username,
             name: user.name,
             role: user.role,
             isNewUser: user.isNewUser,
@@ -45,6 +46,7 @@ export const selectRole = async (req, res, next) => {
             {
                 id: user._id,
                 email: user.email,
+                username: user.username,
                 name: user.name,
                 role: user.role,
                 isNewUser: false,
@@ -93,6 +95,7 @@ export const updateProfile = async (req, res, next) => {
             {
                 id: user._id,
                 email: user.email,
+                username: user.username,
                 name: user.name,
                 role: user.role,
                 isNewUser: user.isNewUser,

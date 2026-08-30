@@ -251,3 +251,29 @@ The two mandatory assessment roles are covered by `STUDENT` and `ADMIN`. `RECRUI
 | Send NoSQL operator payload such as `{ "$ne": "" }` | `400 Bad Request` |
 | Upload a non-image file as a project image | `400 Bad Request` |
 | Recruiter/Admin accesses student-only project edit route | Redirect or `403 Forbidden` |
+
+## Admin Login
+
+To login as an admin during development or assessment demonstration:
+
+1. Add your Google account email to `backend/.env`.
+
+```env
+ADMIN_EMAILS=your.email@example.com
+```
+
+Multiple admins can be configured with comma-separated emails.
+
+```env
+ADMIN_EMAILS=admin1@example.com,admin2@example.com
+```
+
+2. Restart the backend server.
+3. Login with Google using that email address.
+
+If the user already exists as a student/recruiter, promote the account after logging in once:
+
+```bash
+cd backend
+npm run admin:promote -- your.email@example.com
+```
