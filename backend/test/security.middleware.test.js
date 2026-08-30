@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
-import { rejectNoSqlOperators, limitRequestBody } from '../src/middleware/security.middleware.js';
+import { rejectNoSqlOperators, limitRequestBody, createRateLimiter } from '../src/middleware/security.middleware.js';
 
 const createResponse = () => {
   const response = {
@@ -90,4 +90,26 @@ test('rejects oversized request bodies even when content-length is missing', () 
   assert.equal(nextCalled, false);
   assert.equal(res.statusCode, 413);
   assert.equal(res.body.message, 'Request payload too large');
+});
+
+test('blocks repeated requests after the rate limit is exceeded', () => {
+  const limiter = createRateLimiter({ windowMs: 60 * 1000, max: 1 });
+  const req = { ip: '203.0.113.10', headers: {} };
+  const res = createResponse();
+
+  let firstNextCalled = false;
+  let secondNextCalled = false;
+
+  limiter(req, res, () => {
+    firstNextCalled = true;
+  });
+
+  limiter(req, res, () => {
+    secondNextCalled = true;
+  });
+
+  assert.equal(firstNextCalled, true);
+  assert.equal(secondNextCalled, false);
+  assert.equal(res.statusCode, 429);
+  assert.equal(res.body.message, 'Too many requests, please try again later.');
 });

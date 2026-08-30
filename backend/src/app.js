@@ -13,11 +13,17 @@ import likeRoutes from './routes/like.routes.js'
 import followRoutes from './routes/follow.routes.js'
 import notificationRoutes from "./routes/notification.routes.js";
 import userRoutes from './routes/user.routes.js';
-import { rejectNoSqlOperators, requireHttps, limitRequestBody } from './middleware/security.middleware.js';
+import { rejectNoSqlOperators, requireHttps, limitRequestBody, createRateLimiter } from './middleware/security.middleware.js';
 import "./events/listners.js"; // register all event listeners
 
 
 const app = express()
+const apiRateLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 200 })
+const authRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: 'Too many authentication attempts. Please try again later.'
+})
 
 app.set('trust proxy', 1)
 app.use(requireHttps)
@@ -26,6 +32,8 @@ app.use(morgan('dev'))
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
 app.use(cookieParser())
 app.use(limitRequestBody)
+app.use(apiRateLimiter)
+app.use('/api/auth', authRateLimiter)
 app.use(express.json({ limit: '1mb' }))
 app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 app.use(rejectNoSqlOperators)
