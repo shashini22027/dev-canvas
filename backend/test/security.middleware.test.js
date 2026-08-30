@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
 import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig } from '../src/middleware/security.middleware.js';
+import { getAuthTokenFromCookie } from '../src/controllers/auth.controller.js';
 
 const createResponse = () => {
   const response = {
@@ -127,4 +128,10 @@ test('enforces secure default headers for the application', () => {
   assert.equal(config.noSniff, true);
   assert.equal(config.hsts.maxAge, 31536000);
   assert.equal(config.referrerPolicy.policy, 'strict-origin-when-cross-origin');
+});
+
+test('reads the auth token from a secure cookie instead of the URL', () => {
+  const req = { cookies: { devcanvas_auth_token: 'jwt.from.cookie' }, query: { token: 'jwt.from.url' } };
+  assert.equal(getAuthTokenFromCookie(req), 'jwt.from.cookie');
+  assert.equal(getAuthTokenFromCookie({ cookies: {} }), undefined);
 });

@@ -66,6 +66,20 @@ const createApiToken = (user) => jwt.sign(
     { expiresIn: '7d' }
 )
 
+export const getAuthTokenFromCookie = (req) => {
+    return req?.cookies?.devcanvas_auth_token || undefined;
+}
+
+const setAuthTokenCookie = (res, token) => {
+    res.cookie('devcanvas_auth_token', token, {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/',
+    })
+}
+
 const getAsgardeoConfig = () => {
     const orgName = process.env.ASGARDEO_ORG_NAME
     const baseUrl = process.env.ASGARDEO_BASE_URL || (orgName ? `https://api.asgardeo.io/t/${orgName}` : '')
@@ -200,7 +214,8 @@ export const handleAsgardeoCallback = async (req, res, next) => {
         }
 
         const token = createApiToken(user)
-        res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`)
+        setAuthTokenCookie(res, token)
+        res.redirect(`${process.env.CLIENT_URL}/auth/callback`)
     } catch (err) {
         console.error('Asgardeo callback failed:', err.message)
         return res.redirect(`${process.env.CLIENT_URL}/login?error=Failed to complete Asgardeo login`)
@@ -229,8 +244,8 @@ export const handleGoogleCallback = (req, res) => {
     }
 
     const token = createApiToken(user)
-
-    res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`)
+    setAuthTokenCookie(res, token)
+    res.redirect(`${process.env.CLIENT_URL}/auth/callback`)
 }
 
 export const selectRole = async (req, res, next) => {
@@ -249,6 +264,7 @@ export const selectRole = async (req, res, next) => {
 
         // issue a fresh token with updated role
         const token = createApiToken(user)
+        setAuthTokenCookie(res, token)
 
         res.json({ success: true, token, user })
     } catch (err) {
@@ -287,6 +303,7 @@ export const updateProfile = async (req, res, next) => {
 
         // issue a fresh token with updated profile info
         const token = createApiToken(user);
+        setAuthTokenCookie(res, token);
 
         res.json({ success: true, token, user });
     } catch (err) {
