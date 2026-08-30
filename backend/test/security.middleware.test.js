@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
 import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig } from '../src/middleware/security.middleware.js';
-import { getAuthTokenFromCookie } from '../src/controllers/auth.controller.js';
+import { getAuthTokenFromCookie, clearAuthTokenCookie } from '../src/controllers/auth.controller.js';
 
 const createResponse = () => {
   const response = {
@@ -134,4 +134,19 @@ test('reads the auth token from a secure cookie instead of the URL', () => {
   const req = { cookies: { devcanvas_auth_token: 'jwt.from.cookie' }, query: { token: 'jwt.from.url' } };
   assert.equal(getAuthTokenFromCookie(req), 'jwt.from.cookie');
   assert.equal(getAuthTokenFromCookie({ cookies: {} }), undefined);
+});
+
+test('clears the auth token cookie during logout', () => {
+  let cookieOptions = null;
+  const res = {
+    clearCookie(name, options) {
+      cookieOptions = { name, options };
+    }
+  };
+
+  clearAuthTokenCookie(res);
+
+  assert.equal(cookieOptions.name, 'devcanvas_auth_token');
+  assert.equal(cookieOptions.options.path, '/');
+  assert.equal(cookieOptions.options.httpOnly, true);
 });

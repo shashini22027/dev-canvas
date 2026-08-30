@@ -80,6 +80,15 @@ const setAuthTokenCookie = (res, token) => {
     })
 }
 
+export const clearAuthTokenCookie = (res) => {
+    res.clearCookie('devcanvas_auth_token', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+    })
+}
+
 const getAsgardeoConfig = () => {
     const orgName = process.env.ASGARDEO_ORG_NAME
     const baseUrl = process.env.ASGARDEO_BASE_URL || (orgName ? `https://api.asgardeo.io/t/${orgName}` : '')
@@ -223,6 +232,8 @@ export const handleAsgardeoCallback = async (req, res, next) => {
 }
 
 export const logoutFromAsgardeo = (req, res) => {
+    clearAuthTokenCookie(res)
+
     const config = getAsgardeoConfig()
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
     const redirectUrl = `${clientUrl.replace(/\/$/, '')}/login`
