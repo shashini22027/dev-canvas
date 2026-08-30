@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
 import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig, getCorsOptions } from '../src/middleware/security.middleware.js';
-import { getAuthTokenFromCookie, clearAuthTokenCookie, getJwtSecret, logoutFromAsgardeo } from '../src/controllers/auth.controller.js';
+import { getAuthTokenFromCookie, clearAuthTokenCookie, getJwtSecret, logoutFromAsgardeo, sanitizeProfileUpdate } from '../src/controllers/auth.controller.js';
 
 const createResponse = () => {
   const response = {
@@ -198,6 +198,20 @@ test('allows only the configured frontend origin in CORS requests', () => {
   assert.equal(corsOptions.credentials, true);
 
   process.env.CLIENT_URL = previousClientUrl;
+});
+
+test('ignores unsafe profile fields and sanitizes profile updates', () => {
+  const sanitized = sanitizeProfileUpdate({
+    name: '  Alice <script>alert(1)</script>  ',
+    profilePic: 'https://example.com/pic.jpg<script>',
+    role: 'ADMIN',
+    email: 'admin@example.com',
+  });
+
+  assert.deepEqual(sanitized, {
+    name: 'Alice',
+    profilePic: 'https://example.com/pic.jpg',
+  });
 });
 
 test('requires a strong JWT secret before issuing tokens', () => {

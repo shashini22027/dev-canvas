@@ -39,6 +39,37 @@ const getClaimValue = (claims, keys) => {
     return undefined
 }
 
+const sanitizeText = (value, maxLength = 300) => {
+    if (typeof value !== 'string') return ''
+
+    const cleaned = value
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<[^>]+>/g, '')
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+
+    return cleaned.slice(0, maxLength)
+}
+
+export const sanitizeProfileUpdate = (payload = {}) => {
+    const safe = {}
+    const name = sanitizeText(payload.name, 80)
+    const profilePic = typeof payload.profilePic === 'string'
+        ? payload.profilePic
+            .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+            .replace(/<[^>]+>/g, '')
+            .replace(/[\u0000-\u001F\u007F<>"'\\]/g, '')
+            .trim()
+            .slice(0, 500)
+        : ''
+
+    if (name) safe.name = name
+    if (profilePic && /^https?:\/\//i.test(profilePic)) safe.profilePic = profilePic
+
+    return safe
+}
+
 const getEmailFromClaims = (claims) => {
     const email = getClaimValue(claims, [
         'email',
@@ -299,15 +330,15 @@ export const getMe = async (req, res, next) => {
 
 export const updateProfile = async (req, res, next) => {
     try {
-        const { name, profilePic } = req.body;
+        const sanitized = sanitizeProfileUpdate(req.body)
 
-        if (!name || name.trim() === '') {
+        if (!sanitized.name) {
             return res.status(400).json({ success: false, message: 'Name is required' });
         }
 
         const user = await User.findByIdAndUpdate(
             req.user.id,
-            { name, profilePic },
+            sanitized,
             { new: true }
         );
 
