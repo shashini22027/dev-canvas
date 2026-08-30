@@ -138,6 +138,12 @@ export const getSecurityHeadersConfig = () => ({
   },
   ieNoOpen: true,
   noSniff: true,
+  permissionsPolicy: {
+    camera: [],
+    microphone: [],
+    geolocation: [],
+    fullscreen: ['self'],
+  },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   xssFilter: false,
 });

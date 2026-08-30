@@ -128,6 +128,9 @@ test('enforces secure default headers for the application', () => {
   assert.equal(config.noSniff, true);
   assert.equal(config.hsts.maxAge, 31536000);
   assert.equal(config.referrerPolicy.policy, 'strict-origin-when-cross-origin');
+  assert.deepEqual(config.permissionsPolicy.camera, []);
+  assert.deepEqual(config.permissionsPolicy.microphone, []);
+  assert.deepEqual(config.permissionsPolicy.geolocation, []);
 });
 
 test('reads the auth token from a secure cookie instead of the URL', () => {
