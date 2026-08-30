@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
-import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig, getCorsOptions, isValidObjectId, sanitizeResourceStatus } from '../src/middleware/security.middleware.js';
+import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig, getCorsOptions, isValidObjectId, sanitizeResourceStatus, validateUploadedImage } from '../src/middleware/security.middleware.js';
 import { getAuthTokenFromCookie, clearAuthTokenCookie, getJwtSecret, logoutFromAsgardeo, sanitizeProfileUpdate } from '../src/controllers/auth.controller.js';
 
 const createResponse = () => {
@@ -225,6 +225,44 @@ test('sanitizes project status values to the known enum set', () => {
   assert.equal(sanitizeResourceStatus('APPROVED', allowed), 'APPROVED');
   assert.equal(sanitizeResourceStatus('approved', allowed), 'APPROVED');
   assert.equal(sanitizeResourceStatus('SUSPENDED', allowed), null);
+});
+
+test('rejects malicious uploaded image payloads that do not match valid signatures', () => {
+  const pngHeader = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const validJpeg = Buffer.from([0xff, 0xd8, 0xff]);
+  const htmlPayload = Buffer.from('<svg onload=alert(1)>');
+
+  assert.equal(validateUploadedImage({
+    fieldname: 'coverImage',
+    originalname: 'image.png',
+    mimetype: 'image/png',
+    size: 1024,
+    buffer: Buffer.concat([pngHeader, Buffer.from('png-data')]),
+  }), true);
+
+  assert.equal(validateUploadedImage({
+    fieldname: 'coverImage',
+    originalname: 'photo.jpg',
+    mimetype: 'image/jpeg',
+    size: 1024,
+    buffer: Buffer.concat([validJpeg, Buffer.from('jpeg-data')]),
+  }), true);
+
+  assert.equal(validateUploadedImage({
+    fieldname: 'coverImage',
+    originalname: 'script.svg',
+    mimetype: 'image/svg+xml',
+    size: 1024,
+    buffer: htmlPayload,
+  }), false);
+
+  assert.equal(validateUploadedImage({
+    fieldname: 'coverImage',
+    originalname: 'bad.png',
+    mimetype: 'image/png',
+    size: 1024,
+    buffer: Buffer.from('not-a-real-png'),
+  }), false);
 });
 
 test('requires a strong JWT secret before issuing tokens', () => {

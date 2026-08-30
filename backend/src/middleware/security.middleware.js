@@ -101,6 +101,31 @@ export const sanitizeResourceStatus = (value, allowedValues = []) => {
   return normalized;
 };
 
+export const validateUploadedImage = (file) => {
+  if (!file || !file.buffer || !file.originalname) return false;
+
+  const allowedMimeTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+  if (!allowedMimeTypes.has(file.mimetype)) return false;
+
+  if (file.size <= 0 || file.size > 5 * 1024 * 1024) return false;
+
+  const header = file.buffer.subarray(0, 12);
+
+  if (file.mimetype === 'image/png' && !(header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4e && header[3] === 0x47)) {
+    return false;
+  }
+
+  if (file.mimetype === 'image/jpeg' && !(header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff)) {
+    return false;
+  }
+
+  if (file.mimetype === 'image/webp' && !(header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46)) {
+    return false;
+  }
+
+  return true;
+};
+
 export const getCorsOptions = () => {
   const allowedOrigins = new Set();
   const configuredOrigin = (process.env.CLIENT_URL || '').replace(/\/$/, '');

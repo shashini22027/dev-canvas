@@ -11,7 +11,7 @@ import {
 } from '../controllers/project.controller.js';
 import authMiddleware from '../middleware/auth.middleware.js';
 import roleMiddleware from '../middleware/role.middleware.js';
-import { auditLog } from '../middleware/security.middleware.js';
+import { auditLog, validateUploadedImage } from '../middleware/security.middleware.js';
 import { csrfProtection } from '../middleware/csrf.middleware.js';
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -23,6 +23,11 @@ const upload = multer({
     if (!allowedImageTypes.includes(file.mimetype)) {
       return cb(new Error('Only JPG, PNG, and WEBP images are allowed'));
     }
+
+    if (!validateUploadedImage(file)) {
+      return cb(new Error('Uploaded image file is invalid or corrupted'));
+    }
+
     cb(null, true);
   },
 });
