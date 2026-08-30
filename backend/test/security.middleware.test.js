@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
-import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig, getCorsOptions } from '../src/middleware/security.middleware.js';
+import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig, getCorsOptions, isValidObjectId } from '../src/middleware/security.middleware.js';
 import { getAuthTokenFromCookie, clearAuthTokenCookie, getJwtSecret, logoutFromAsgardeo, sanitizeProfileUpdate } from '../src/controllers/auth.controller.js';
 
 const createResponse = () => {
@@ -212,6 +212,11 @@ test('ignores unsafe profile fields and sanitizes profile updates', () => {
     name: 'Alice',
     profilePic: 'https://example.com/pic.jpg',
   });
+});
+
+test('rejects malformed Mongo object ids before database access', () => {
+  assert.equal(isValidObjectId('not-a-valid-id'), false);
+  assert.equal(isValidObjectId('507f1f77bcf86cd799439011'), true);
 });
 
 test('requires a strong JWT secret before issuing tokens', () => {

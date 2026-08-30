@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 const dangerousKeyPattern = /^\$/;
 const MAX_BODY_SIZE_BYTES = 1024 * 1024;
 
@@ -81,6 +83,11 @@ export const getSafeErrorMessage = (statusCode, error) => {
   }
 
   return message;
+};
+
+export const isValidObjectId = (value) => {
+  if (typeof value !== 'string' && typeof value !== 'number') return false;
+  return mongoose.Types.ObjectId.isValid(String(value));
 };
 
 export const getCorsOptions = () => {
