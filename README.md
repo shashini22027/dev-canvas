@@ -148,7 +148,7 @@ npm install
 ### 2. Environment Variables
 Create a `.env` file in the **backend** directory:
 ```env
-PORT=5000
+PORT=3000
 MONGODB_URI=your_mongodb_uri
 CLIENT_URL=http://localhost:5173
 JWT_SECRET=your_super_secret_key
@@ -166,7 +166,7 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 Create a `.env` file in the **frontend** directory:
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=http://localhost:3000/api
 ```
 
 ### 3. Run the Application
@@ -268,6 +268,7 @@ ASGARDEO_ORG_NAME=your_org_name
 ASGARDEO_CLIENT_ID=your_asgardeo_client_id
 ASGARDEO_CLIENT_SECRET=your_asgardeo_client_secret
 ASGARDEO_CALLBACK_URL=http://localhost:3000/api/auth/asgardeo/callback
+ASGARDEO_USERINFO_ENDPOINT=https://api.asgardeo.io/t/your_org_name/oauth2/userinfo
 
 OIDC_ISSUER=https://api.asgardeo.io/t/your_org_name/oauth2/token
 OIDC_AUDIENCE=your_asgardeo_client_id

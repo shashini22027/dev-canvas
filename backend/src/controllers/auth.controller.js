@@ -17,6 +17,19 @@ const decodeJwtPayload = (token) => {
     return JSON.parse(Buffer.from(payload.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'))
 }
 
+const createUniqueUsername = async (baseUsername) => {
+    const base = (baseUsername || 'user').replace(/[^a-zA-Z0-9._-]/g, '').slice(0, 40) || 'user'
+    let username = base
+    let suffix = 1
+
+    while (await User.exists({ username })) {
+        username = `${base}${suffix}`
+        suffix += 1
+    }
+
+    return username
+}
+
 const createApiToken = (user) => jwt.sign(
     {
         id: user._id,
@@ -41,6 +54,7 @@ const getAsgardeoConfig = () => {
         callbackUrl: process.env.ASGARDEO_CALLBACK_URL || `${process.env.SERVER_URL || 'http://localhost:5000'}/api/auth/asgardeo/callback`,
         authorizeEndpoint: process.env.ASGARDEO_AUTHORIZE_ENDPOINT || `${baseUrl}/oauth2/authorize`,
         tokenEndpoint: process.env.ASGARDEO_TOKEN_ENDPOINT || `${baseUrl}/oauth2/token`,
+        userInfoEndpoint: process.env.ASGARDEO_USERINFO_ENDPOINT || `${baseUrl}/oauth2/userinfo`,
         logoutEndpoint: process.env.ASGARDEO_LOGOUT_ENDPOINT || `${baseUrl}/oidc/logout`,
     }
 }
@@ -64,7 +78,7 @@ export const startAsgardeoLogin = (req, res) => {
         response_type: 'code',
         client_id: config.clientId,
         redirect_uri: config.callbackUrl,
-        scope: 'openid profile email',
+        scope: process.env.ASGARDEO_SCOPES || 'openid profile email',
         state,
     })
 
@@ -105,9 +119,26 @@ export const handleAsgardeoCallback = async (req, res, next) => {
         }
 
         const tokens = await tokenResponse.json()
-        const claims = decodeJwtPayload(tokens.id_token)
+        const idTokenClaims = decodeJwtPayload(tokens.id_token)
+        let userInfoClaims = {}
+
+        if (!idTokenClaims.email && tokens.access_token) {
+            const userInfoResponse = await fetch(config.userInfoEndpoint, {
+                headers: { Authorization: `Bearer ${tokens.access_token}` },
+            })
+
+            if (userInfoResponse.ok) {
+                userInfoClaims = await userInfoResponse.json()
+            }
+        }
+
+        const claims = { ...userInfoClaims, ...idTokenClaims }
         const email = claims.email?.toLowerCase()
-        const username = claims.preferred_username || email?.split('@')[0] || claims.sub
+        if (!email) {
+            return res.redirect(`${process.env.CLIENT_URL}/login?error=Asgardeo email claim is required`)
+        }
+
+        const username = claims.preferred_username || email.split('@')[0] || claims.sub
         const isConfiguredAdmin = getAdminEmails().includes(email)
 
         let user = await User.findOne({ googleId: `asgardeo:${claims.sub}` })
@@ -120,7 +151,7 @@ export const handleAsgardeoCallback = async (req, res, next) => {
             user = await User.create({
                 googleId: `asgardeo:${claims.sub}`,
                 email,
-                username,
+                username: await createUniqueUsername(username),
                 name: claims.name || username,
                 profilePic: claims.picture,
                 role: isConfiguredAdmin ? 'ADMIN' : 'STUDENT',
@@ -145,7 +176,8 @@ export const handleAsgardeoCallback = async (req, res, next) => {
         const token = createApiToken(user)
         res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`)
     } catch (err) {
-        next(err)
+        console.error('Asgardeo callback failed:', err.message)
+        return res.redirect(`${process.env.CLIENT_URL}/login?error=Failed to complete Asgardeo login`)
     }
 }
 
@@ -219,7 +251,7 @@ export const updateProfile = async (req, res, next) => {
         );
 
         if (!user) {
-            return res.status(44.404).json({ success: false, message: 'User not found' });
+            return res.status(404).json({ success: false, message: 'User not found' });
         }
 
         // issue a fresh token with updated profile info
