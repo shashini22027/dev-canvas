@@ -186,6 +186,20 @@ npm run dev
 
 The app will be running at `http://localhost:5173`.
 
+### Optional Local HTTPS
+
+For HTTPS testing, create a local certificate and configure the backend:
+
+```env
+HTTPS_ENABLED=true
+HTTPS_KEY_PATH=./certs/localhost-key.pem
+HTTPS_CERT_PATH=./certs/localhost.pem
+SERVER_URL=https://localhost:3000
+ASGARDEO_CALLBACK_URL=https://localhost:3000/api/auth/asgardeo/callback
+```
+
+When HTTPS is enabled, add the HTTPS callback URL in the Asgardeo application settings.
+
 ---
 
 ## 📁 API Structure
