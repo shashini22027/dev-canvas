@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
-import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig } from '../src/middleware/security.middleware.js';
+import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig, getCorsOptions } from '../src/middleware/security.middleware.js';
 import { getAuthTokenFromCookie, clearAuthTokenCookie, getJwtSecret, logoutFromAsgardeo } from '../src/controllers/auth.controller.js';
 
 const createResponse = () => {
@@ -171,6 +171,30 @@ test('uses a local login redirect instead of an external Asgardeo logout redirec
 
   process.env.CLIENT_URL = previousClientUrl;
   process.env.ASGARDEO_LOGOUT_ENDPOINT = previousLogoutEndpoint;
+});
+
+test('allows only the configured frontend origin in CORS requests', () => {
+  const previousClientUrl = process.env.CLIENT_URL;
+  process.env.CLIENT_URL = 'http://localhost:5173';
+
+  const corsOptions = getCorsOptions();
+
+  let allowed = false;
+  let rejected = false;
+
+  corsOptions.origin('http://localhost:5173', (err, allow) => {
+    allowed = !err && allow === true;
+  });
+
+  corsOptions.origin('https://evil.example', (err) => {
+    rejected = !!err;
+  });
+
+  assert.equal(allowed, true);
+  assert.equal(rejected, true);
+  assert.equal(corsOptions.credentials, true);
+
+  process.env.CLIENT_URL = previousClientUrl;
 });
 
 test('requires a strong JWT secret before issuing tokens', () => {

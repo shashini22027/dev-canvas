@@ -13,7 +13,7 @@ import likeRoutes from './routes/like.routes.js'
 import followRoutes from './routes/follow.routes.js'
 import notificationRoutes from "./routes/notification.routes.js";
 import userRoutes from './routes/user.routes.js';
-import { rejectNoSqlOperators, requireHttps, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig } from './middleware/security.middleware.js';
+import { rejectNoSqlOperators, requireHttps, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig, getCorsOptions } from './middleware/security.middleware.js';
 import "./events/listners.js"; // register all event listeners
 
 
@@ -30,7 +30,7 @@ app.set('trust proxy', 1)
 app.use(requireHttps)
 app.use(helmet(getSecurityHeadersConfig()))
 app.use(morgan('dev'))
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
+app.use(cors(getCorsOptions()))
 app.use(cookieParser())
 app.use(limitRequestBody)
 app.use(apiRateLimiter)
