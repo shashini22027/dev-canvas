@@ -11,6 +11,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const dropdownRef = useRef(null);
 
   const navLinks = navigationConfig[user?.role] || [];
@@ -43,7 +44,13 @@ const Navbar = () => {
 
   const uploadBtnClass = "px-6 py-2.5 ml-4 bg-slate-900 text-white text-xs font-bold uppercase tracking-[0.1em] rounded-full hover:bg-black transition-all shadow-[0_4px_14px_0_rgba(0,0,0,0.15)] hover:shadow-[0_6px_20px_rgba(0,0,0,0.23)] border border-slate-800";
 
+  const handleLogoutConfirm = () => {
+    setShowLogoutModal(false);
+    authService.logout();
+  };
+
   return (
+    <>
     <nav className={`sticky top-0 z-50 px-6 sm:px-12 flex justify-between items-center w-full box-border transition-all duration-300 ${
       isScrolled 
         ? 'py-3 bg-white/90 backdrop-blur-md shadow-sm border-b border-slate-200' 
@@ -142,7 +149,7 @@ const Navbar = () => {
                 </button>
                 <div className="h-px bg-slate-100 my-1" />
                 <button
-                  onClick={() => { setIsDropdownOpen(false); authService.logout(); }}
+                  onClick={() => { setIsDropdownOpen(false); setShowLogoutModal(true); }}
                   className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors cursor-pointer text-left"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -221,7 +228,7 @@ const Navbar = () => {
           )}
           {/* Dashboard link in mobile - ADMIN only -> Moved to Main Nav */}
           <button
-            onClick={() => { setIsMobileMenuOpen(false); authService.logout(); }}
+            onClick={() => { setIsMobileMenuOpen(false); setShowLogoutModal(true); }}
             className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition-all cursor-pointer"
           >
             Logout
@@ -229,7 +236,35 @@ const Navbar = () => {
         </div>
       )}
 
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Sign Out?</h3>
+            <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+              Are you sure you want to sign out? You will be redirected back to the login page.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleLogoutConfirm}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-md transition-colors"
+              >
+                Yes, Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </nav>
+    </>
   );
 };
 

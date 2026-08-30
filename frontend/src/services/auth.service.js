@@ -1,3 +1,4 @@
+import { toast } from 'react-toastify';
 import { getMeAPI, selectRoleAPI, updateProfileAPI } from '../api/auth.api.js';
 import useAuthStore from '../store/authStore';
 
@@ -81,7 +82,12 @@ export const authService = {
 
     logout: () => {
         useAuthStore.getState().resetAuth();
-        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-        window.location.href = `${baseURL}/auth/asgardeo/logout`;
+        toast.success('Logout successful! Redirecting to login...');
+
+        window.setTimeout(() => {
+            window.location.href = '/login';
+        }, 1200);
+
+        return true;
     }
 };

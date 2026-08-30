@@ -13,6 +13,7 @@ const AdminProfile = () => {
     const [name, setName] = useState(user?.name || '');
     const [profilePic, setProfilePic] = useState(user?.profilePic || '');
     const [isSaving, setIsSaving] = useState(false);
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [errorMsg, setErrorMsg] = useState(null);
 
     const formatDate = (dateStr) =>
@@ -59,6 +60,11 @@ const AdminProfile = () => {
         setProfilePic(user?.profilePic || '');
         setErrorMsg(null);
         setIsEditing(false);
+    };
+
+    const handleLogoutConfirm = () => {
+        setShowLogoutModal(false);
+        authService.logout();
     };
 
     return (
@@ -423,7 +429,7 @@ const AdminProfile = () => {
                             </button>
                         )}
                         <button
-                            onClick={() => authService.logout()}
+                            onClick={() => setShowLogoutModal(true)}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 8,
                                 background: '#fff', color: '#ef4444', fontSize: 13.5, fontWeight: 700,
@@ -444,6 +450,33 @@ const AdminProfile = () => {
                 )}
 
             </main>
+
+            {showLogoutModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
+                        <h3 className="text-lg font-bold text-slate-900 mb-2">Sign Out?</h3>
+                        <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                            Are you sure you want to sign out? You will be redirected back to the login page.
+                        </p>
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => setShowLogoutModal(false)}
+                                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-md transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleLogoutConfirm}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-md transition-colors"
+                            >
+                                Yes, Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 @keyframes profileModalPop {
