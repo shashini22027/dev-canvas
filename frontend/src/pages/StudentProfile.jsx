@@ -77,24 +77,27 @@ const StudentProfile = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-80px)] overflow-hidden bg-white text-slate-900 pt-20 px-4 sm:px-8 lg:px-40 font-sans">
-      <div className="w-full h-full flex flex-col md:flex-row gap-12 lg:gap-24">
+    <div className="min-h-[calc(100vh-80px)] bg-slate-50 text-slate-900 px-4 py-8 sm:px-8 lg:px-12 font-sans">
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 lg:grid-cols-[420px_minmax(0,1fr)]">
 
         {/* Left Column: Profile Edit Form */}
-        <div className="w-full md:w-1/3 h-full pr-4 pb-16">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-4 mb-8">
+        <div className="w-full">
+          <div className="flex flex-col rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-4 border-b border-slate-100 pb-6 mb-6">
               <img
                 src={user?.profilePic || "https://api.dicebear.com/7.x/avataaars/svg?seed=fallback"}
                 alt="Profile"
-                className="w-20 h-20 rounded-full object-cover"
+                className="w-20 h-20 rounded-md object-cover border border-slate-200"
               />
-              <div>
+              <div className="min-w-0">
+                <span className="inline-flex rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                  Student
+                </span>
                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
                   {user?.name || "Student Name"}
                 </h1>
-                <p className="text-slate-500 text-sm">{user?.email}</p>
-                <p className="text-slate-400 text-xs">@{user?.username || user?.email?.split('@')[0]}</p>
+                <p className="truncate text-slate-500 text-sm">{user?.email}</p>
+                <p className="truncate text-slate-400 text-xs">@{user?.username || user?.email?.split('@')[0]}</p>
               </div>
             </div>
 
@@ -204,7 +207,7 @@ const StudentProfile = () => {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="w-full py-2.5 bg-slate-900 text-white text-sm font-semibold hover:bg-white transition-colors disabled:opacity-50 border-2 border-slate-900 hover:text-black"
+                  className="w-full rounded-md border border-slate-900 bg-slate-900 py-3 text-sm font-bold text-white transition-colors hover:bg-white hover:text-slate-900 disabled:opacity-50"
                 >
                   {isSaving ? "Updating..." : "Update Profile"}
                 </button>
@@ -214,17 +217,19 @@ const StudentProfile = () => {
         </div>
 
         {/* Right Column: Published Projects List */}
-        <div className="w-full md:w-2/3 h-full overflow-y-auto no-scrollbar pr-4 pb-16">
-          <div className="mb-10 pb-4 border-b border-slate-200">
-            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Latest Publications</h2>
+        <div className="w-full">
+          <div className="mb-6 rounded-lg border border-slate-200 bg-white px-6 py-5 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Student Workspace</p>
+            <h2 className="mt-1 text-3xl font-extrabold text-slate-950 tracking-tight">My Project Submissions</h2>
+            <p className="mt-2 text-sm text-slate-500">Review submitted projects and update your own showcase records.</p>
           </div>
 
           {loadingProjects ? (
-            <div className="py-12 text-slate-500 text-sm">Loading stories...</div>
+            <div className="rounded-lg border border-slate-200 bg-white p-8 text-slate-500 text-sm shadow-sm">Loading projects...</div>
           ) : projects.length > 0 ? (
-            <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-4">
               {projects.map(project => (
-                <div key={project._id} className="flex flex-col sm:flex-row gap-6 items-start pb-10 border-b border-slate-100 last:border-0">
+                <div key={project._id} className="flex flex-col gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-start">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-slate-500 font-medium tracking-wide">
@@ -266,19 +271,20 @@ const StudentProfile = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="w-full sm:w-32 h-32 flex-shrink-0">
+                  <div className="w-full sm:w-36 h-32 flex-shrink-0">
                     <img
                       src={project.coverImage || "https://via.placeholder.com/150"}
                       alt={project.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full rounded-md border border-slate-100 object-cover"
                     />
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="py-12">
-              <p className="text-slate-500 text-lg">You haven't published any projects yet.</p>
+            <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 shadow-sm">
+              <p className="text-slate-600 text-lg font-semibold">You haven't published any projects yet.</p>
+              <p className="mt-2 text-sm text-slate-500">Create a project submission to show your work in DevCanvas.</p>
             </div>
           )}
         </div>
