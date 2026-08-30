@@ -1,6 +1,6 @@
 import { updateUserService, getUserByIdService } from '../services/user.service.js';
 
-export const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res, next) => {
   try {
     const updatedUser = await updateUserService(req.user.id, req.body);
     
@@ -10,11 +10,11 @@ export const updateProfile = async (req, res) => {
 
     res.json(updatedUser);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return next(err);
   }
 };
 
-export const getUserById = async (req, res) => {
+export const getUserById = async (req, res, next) => {
   try {
     const result = await getUserByIdService(req.params.id);
 
@@ -24,6 +24,6 @@ export const getUserById = async (req, res) => {
 
     res.json(result);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return next(err);
   }
 };

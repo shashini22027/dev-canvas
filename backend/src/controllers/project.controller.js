@@ -1,6 +1,6 @@
 import * as projectService from '../services/project.service.js';
 
-export const createProject = async (req, res) => {
+export const createProject = async (req, res, next) => {
   try {
     const project = await projectService.createProject(req.body, req.files, req.user);
     res.status(201).json(project);
@@ -8,29 +8,29 @@ export const createProject = async (req, res) => {
     if (err.message.includes('required') || err.message.includes('Invalid') || err.message.includes('Team member')) {
       return res.status(400).json({ message: err.message });
     }
-    res.status(500).json({ message: err.message });
+    return next(err);
   }
 };
 
-export const getProjects = async (req, res) => {
+export const getProjects = async (req, res, next) => {
   try {
     const projects = await projectService.getProjects(req.query.userId);
     res.json(projects);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return next(err);
   }
 };
 
-export const getMyProjects = async (req, res) => {
+export const getMyProjects = async (req, res, next) => {
   try {
     const projects = await projectService.getAuthenticatedUserProjects(req.user.id);
     res.json(projects);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    return next(err);
   }
 };
 
-export const getProjectById = async (req, res) => {
+export const getProjectById = async (req, res, next) => {
   try {
     const project = await projectService.getProjectById(req.params.id);
     res.json(project);
@@ -38,11 +38,11 @@ export const getProjectById = async (req, res) => {
     if (err.message === 'Project not found') {
       return res.status(404).json({ message: 'Project not found' });
     }
-    res.status(500).json({ message: err.message });
+    return next(err);
   }
 };
 
-export const updateProject = async (req, res) => {
+export const updateProject = async (req, res, next) => {
   try {
     const project = await projectService.updateProject(req.params.id, req.body, req.files, req.user.id);
     res.json(project);
@@ -50,17 +50,17 @@ export const updateProject = async (req, res) => {
     if (err.message === 'Project not found') return res.status(404).json({ message: err.message });
     if (err.message === 'Unauthorized') return res.status(403).json({ message: err.message });
     if (err.message.includes('Invalid') || err.message.includes('Team member')) return res.status(400).json({ message: err.message });
-    res.status(500).json({ message: err.message });
+    return next(err);
   }
 };
 
-export const deleteProject = async (req, res) => {
+export const deleteProject = async (req, res, next) => {
   try {
     const result = await projectService.deleteProject(req.params.id, req.user.id);
     res.json(result);
   } catch (err) {
     if (err.message === 'Project not found') return res.status(404).json({ message: err.message });
     if (err.message === 'Unauthorized') return res.status(403).json({ message: err.message });
-    res.status(500).json({ message: err.message });
+    return next(err);
   }
 };
