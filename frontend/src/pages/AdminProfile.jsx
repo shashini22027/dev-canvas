@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import useAuthStore from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
+import AuthenticatedProfileInfo from '../components/AuthenticatedProfileInfo';
 
 const AdminProfile = () => {
     const { user } = useAuthStore();
@@ -183,6 +184,10 @@ const AdminProfile = () => {
                                         Member since {formatDate(user.createdAt)}
                                     </span>
                                 )}
+                            </div>
+
+                            <div className="mt-5">
+                                <AuthenticatedProfileInfo profile={user} />
                             </div>
                         </div>
                     ) : (

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import { toggleFollow, getFollowStatus, getFollowerCount } from '../api/follow.api';
+import AuthenticatedProfileInfo from '../components/AuthenticatedProfileInfo';
 
 const RecruiterProfile = ({ profile: profileProp }) => {
   const location = useLocation();
@@ -97,6 +98,10 @@ const RecruiterProfile = ({ profile: profileProp }) => {
         <div className="mt-6 flex items-center justify-between text-sm text-slate-500">
           <span>Followers {followerCount}</span>
           <span>{profile.role}</span>
+        </div>
+
+        <div className="mt-6">
+          <AuthenticatedProfileInfo profile={profile} />
         </div>
 
         {error && <p className="mt-3 text-sm text-rose-600">{error}</p>}

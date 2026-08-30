@@ -49,6 +49,11 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxLength: 160
   },
+  organizationName: {
+    type: String,
+    trim: true,
+    maxLength: 160
+  },
   contactNumber: {
     type: String,
     trim: true,
