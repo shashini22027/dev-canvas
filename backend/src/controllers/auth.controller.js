@@ -30,6 +30,27 @@ const createUniqueUsername = async (baseUsername) => {
     return username
 }
 
+const getClaimValue = (claims, keys) => {
+    for (const key of keys) {
+        if (claims[key]) return claims[key]
+    }
+
+    return undefined
+}
+
+const getEmailFromClaims = (claims) => {
+    const email = getClaimValue(claims, [
+        'email',
+        'emailAddress',
+        'emailaddress',
+        'http://wso2.org/claims/emailaddress',
+        'http://wso2.org/claims/email',
+    ])
+
+    if (Array.isArray(email)) return email[0]?.toLowerCase()
+    return email?.toLowerCase()
+}
+
 const createApiToken = (user) => jwt.sign(
     {
         id: user._id,
@@ -133,12 +154,13 @@ export const handleAsgardeoCallback = async (req, res, next) => {
         }
 
         const claims = { ...userInfoClaims, ...idTokenClaims }
-        const email = claims.email?.toLowerCase()
+        const email = getEmailFromClaims(claims)
         if (!email) {
+            console.error('Asgardeo email claim missing. Available claims:', Object.keys(claims))
             return res.redirect(`${process.env.CLIENT_URL}/login?error=Asgardeo email claim is required`)
         }
 
-        const username = claims.preferred_username || email.split('@')[0] || claims.sub
+        const username = claims.preferred_username || claims.username || email.split('@')[0] || claims.sub
         const isConfiguredAdmin = getAdminEmails().includes(email)
 
         let user = await User.findOne({ googleId: `asgardeo:${claims.sub}` })
