@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import Project from '../models/Project.js';
+import { sanitizeResourceStatus } from '../middleware/security.middleware.js';
 
 export const fetchAllUsers = async () => {
     return await User.find({});
@@ -18,13 +19,14 @@ export const removeProject = async (projectId) => {
 };
 
 export const updateProjectStatus = async (projectId, status) => {
-    if (!['PENDING', 'APPROVED', 'REJECTED'].includes(status)) {
+    const sanitizedStatus = sanitizeResourceStatus(status, ['PENDING', 'APPROVED', 'REJECTED']);
+    if (!sanitizedStatus) {
         throw new Error('Invalid project status');
     }
 
     const project = await Project.findByIdAndUpdate(
         projectId,
-        { status },
+        { status: sanitizedStatus },
         { new: true, runValidators: true }
     ).populate('studentId', 'name email profilePic username');
 

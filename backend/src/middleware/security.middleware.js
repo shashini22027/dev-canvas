@@ -90,6 +90,17 @@ export const isValidObjectId = (value) => {
   return mongoose.Types.ObjectId.isValid(String(value));
 };
 
+export const sanitizeResourceStatus = (value, allowedValues = []) => {
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim().toUpperCase();
+  const acceptedValues = allowedValues.length ? allowedValues : [];
+
+  if (!acceptedValues.includes(normalized)) return null;
+
+  return normalized;
+};
+
 export const getCorsOptions = () => {
   const allowedOrigins = new Set();
   const configuredOrigin = (process.env.CLIENT_URL || '').replace(/\/$/, '');
