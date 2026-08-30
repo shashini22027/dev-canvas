@@ -73,6 +73,16 @@ export const requireHttps = (req, res, next) => {
   return res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
 };
 
+export const getSafeErrorMessage = (statusCode, error) => {
+  const message = error?.message || 'Something went wrong';
+
+  if (statusCode >= 500) {
+    return 'Internal server error';
+  }
+
+  return message;
+};
+
 export const auditLog = (action) => (req, res, next) => {
   const userId = req.user?.id || 'anonymous';
   console.info(`[audit] action=${action} user=${userId} method=${req.method} path=${req.originalUrl}`);

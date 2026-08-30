@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
-import { rejectNoSqlOperators, limitRequestBody, createRateLimiter } from '../src/middleware/security.middleware.js';
+import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage } from '../src/middleware/security.middleware.js';
 
 const createResponse = () => {
   const response = {
@@ -112,4 +112,9 @@ test('blocks repeated requests after the rate limit is exceeded', () => {
   assert.equal(secondNextCalled, false);
   assert.equal(res.statusCode, 429);
   assert.equal(res.body.message, 'Too many requests, please try again later.');
+});
+
+test('hides internal error details from client responses', () => {
+  assert.equal(getSafeErrorMessage(500, new Error('MongoDB connection lost')), 'Internal server error');
+  assert.equal(getSafeErrorMessage(400, new Error('Bad request details')), 'Bad request details');
 });

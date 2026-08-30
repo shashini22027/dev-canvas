@@ -13,7 +13,7 @@ import likeRoutes from './routes/like.routes.js'
 import followRoutes from './routes/follow.routes.js'
 import notificationRoutes from "./routes/notification.routes.js";
 import userRoutes from './routes/user.routes.js';
-import { rejectNoSqlOperators, requireHttps, limitRequestBody, createRateLimiter } from './middleware/security.middleware.js';
+import { rejectNoSqlOperators, requireHttps, limitRequestBody, createRateLimiter, getSafeErrorMessage } from './middleware/security.middleware.js';
 import "./events/listners.js"; // register all event listeners
 
 
@@ -55,10 +55,10 @@ app.use('/api/users', userRoutes);
 
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-
   const status = err.status || 500;
-  const message = err.message || "Internal Server Error";
+  const message = getSafeErrorMessage(status, err);
+
+  console.error(`[error] ${status} ${req.method} ${req.originalUrl}`, err?.stack || err?.message || err);
 
   res.status(status).json({
     success: false,
