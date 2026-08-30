@@ -6,6 +6,7 @@
   "scripts": {
     "test": "node --test",
     "dev": "nodemon src/index.js",
+    "build": "node --check src/index.js",
     "start": "node src/index.js",
     "db:init": "node scripts/init-db.js",
     "admin:promote": "node scripts/make-admin.js"

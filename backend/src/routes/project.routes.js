@@ -38,8 +38,8 @@ router.post('/', authMiddleware, roleMiddleware('STUDENT'), csrfProtection, audi
 router.get('/', getProjects);
 router.get('/me', authMiddleware, roleMiddleware('STUDENT'), getMyProjects);
 router.get('/:id', getProjectById);
-router.put('/:id', authMiddleware, csrfProtection, auditLog('project.update'), projectUpload, updateProject);
-router.delete('/:id', authMiddleware, csrfProtection, auditLog('project.delete'), deleteProject);
+router.put('/:id', authMiddleware, roleMiddleware('STUDENT'), csrfProtection, auditLog('project.update'), projectUpload, updateProject);
+router.delete('/:id', authMiddleware, roleMiddleware('STUDENT'), csrfProtection, auditLog('project.delete'), deleteProject);
 
 router.use((err, req, res, next) => {
   if (err instanceof multer.MulterError || err.message.includes('images are allowed')) {
