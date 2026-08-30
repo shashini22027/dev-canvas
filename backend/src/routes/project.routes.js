@@ -10,6 +10,7 @@ import {
 } from '../controllers/project.controller.js';
 import authMiddleware from '../middleware/auth.middleware.js';
 import { auditLog } from '../middleware/security.middleware.js';
+import { csrfProtection } from '../middleware/csrf.middleware.js';
 
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -31,11 +32,11 @@ const projectUpload = upload.fields([
 
 const router = express.Router();
 
-router.post('/', authMiddleware, auditLog('project.create'), projectUpload, createProject);
+router.post('/', authMiddleware, csrfProtection, auditLog('project.create'), projectUpload, createProject);
 router.get('/', getProjects);
 router.get('/:id', getProjectById);
-router.put('/:id', authMiddleware, auditLog('project.update'), projectUpload, updateProject);
-router.delete('/:id', authMiddleware, auditLog('project.delete'), deleteProject);
+router.put('/:id', authMiddleware, csrfProtection, auditLog('project.update'), projectUpload, updateProject);
+router.delete('/:id', authMiddleware, csrfProtection, auditLog('project.delete'), deleteProject);
 
 router.use((err, req, res, next) => {
   if (err instanceof multer.MulterError || err.message.includes('images are allowed')) {

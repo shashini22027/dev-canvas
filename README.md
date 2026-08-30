@@ -248,9 +248,22 @@ The two mandatory assessment roles are covered by `STUDENT` and `ADMIN`. `RECRUI
 | --- | --- |
 | Call protected API without `Authorization` header | `401 Unauthorized` |
 | Student edits another student's project | `403 Forbidden` |
+| Submit unsafe POST/PUT/PATCH/DELETE without `X-CSRF-Token` | `403 Forbidden` |
 | Send NoSQL operator payload such as `{ "$ne": "" }` | `400 Bad Request` |
 | Upload a non-image file as a project image | `400 Bad Request` |
 | Recruiter/Admin accesses student-only project edit route | Redirect or `403 Forbidden` |
+
+## OIDC Access Token Validation
+
+The backend can validate RS256 OIDC JWT bearer tokens from a cloud IdP using JWKS. Configure these values in `backend/.env`:
+
+```env
+OIDC_ISSUER=https://accounts.google.com
+OIDC_AUDIENCE=your_oidc_client_id_or_api_audience
+OIDC_JWKS_URI=https://www.googleapis.com/oauth2/v3/certs
+```
+
+When these values are configured, protected APIs can validate OIDC tokens using issuer, audience, expiry, algorithm, and signature checks. The existing Google login flow still issues an application JWT for the React app, and that token includes a CSRF claim used by unsafe API requests.
 
 ## Admin Login
 

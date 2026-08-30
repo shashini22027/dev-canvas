@@ -1,6 +1,21 @@
 // OAuth callback and JWT issue logic
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import User from '../models/User.js'
+
+const createApiToken = (user) => jwt.sign(
+    {
+        id: user._id,
+        email: user.email,
+        username: user.username,
+        name: user.name,
+        role: user.role,
+        isNewUser: user.isNewUser,
+        csrfToken: crypto.randomBytes(32).toString('hex'),
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+)
 
 export const handleGoogleCallback = (req, res) => {
 
@@ -10,19 +25,7 @@ export const handleGoogleCallback = (req, res) => {
         return res.redirect(`${process.env.CLIENT_URL}/login?error=Account suspended. Please contact support.`)
     }
 
-    const token = jwt.sign(
-        {
-            id: user._id,
-            email: user.email,
-            username: user.username,
-            name: user.name,
-            role: user.role,
-            isNewUser: user.isNewUser,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '7d' }
-
-    )
+    const token = createApiToken(user)
 
     res.redirect(`${process.env.CLIENT_URL}/auth/callback?token=${token}`)
 }
@@ -42,18 +45,7 @@ export const selectRole = async (req, res, next) => {
         )
 
         // issue a fresh token with updated role
-        const token = jwt.sign(
-            {
-                id: user._id,
-                email: user.email,
-                username: user.username,
-                name: user.name,
-                role: user.role,
-                isNewUser: false,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        )
+        const token = createApiToken(user)
 
         res.json({ success: true, token, user })
     } catch (err) {
@@ -91,18 +83,7 @@ export const updateProfile = async (req, res, next) => {
         }
 
         // issue a fresh token with updated profile info
-        const token = jwt.sign(
-            {
-                id: user._id,
-                email: user.email,
-                username: user.username,
-                name: user.name,
-                role: user.role,
-                isNewUser: user.isNewUser,
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
+        const token = createApiToken(user);
 
         res.json({ success: true, token, user });
     } catch (err) {

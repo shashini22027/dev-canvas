@@ -1,6 +1,7 @@
 import express from 'express';
 import authMiddleware from '../middleware/auth.middleware.js';
 import roleMiddleware from '../middleware/role.middleware.js';
+import { csrfProtection } from '../middleware/csrf.middleware.js';
 import {
   toggleFollow,
   getFollowStatus,
@@ -14,6 +15,7 @@ router.post(
   '/:userId/toggle',
   authMiddleware,
   roleMiddleware('RECRUITER'),
+  csrfProtection,
   toggleFollow
 );
 
