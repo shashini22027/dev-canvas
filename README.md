@@ -205,3 +205,49 @@ The app will be running at `http://localhost:5173`.
 ## 👥 Contributors
 Developed as part of the SE/2022 batch practical assignment. 
 *Architected and led by the core DevCanvas Team.*
+
+---
+
+## Secure Web Application Assessment Mapping
+
+DevCanvas adapts the bookfair stall-reservation workflow into a student project showcase workflow.
+
+| Bookfair requirement | DevCanvas implementation |
+| --- | --- |
+| Stall Vendor | Student / Project Owner |
+| Exhibition Organizer | Admin |
+| Stall reservation | Project submission |
+| Vendor profile | Student profile |
+| Vendor's own reservations | Student's own projects |
+| Organizer manages all reservations | Admin manages all projects |
+| Exhibition/Event name | Project category |
+| Stall type | Project type |
+| Stall size | Technology stack / domain tags |
+| Number of stalls | Team member count |
+| Business category | Project category |
+| Special requirements/comments | Project description and special comments |
+
+The two mandatory assessment roles are covered by `STUDENT` and `ADMIN`. `RECRUITER` is an additional role for browsing, liking, and following student work.
+
+## Security Controls
+
+| OWASP area | DevCanvas control |
+| --- | --- |
+| Broken Access Control | Backend checks project owner before edit/delete and admin role before moderation |
+| Authentication Failures | Cloud IdP login with Google OAuth/OIDC-style flow and signed JWT API access |
+| Injection | Mongoose queries plus request rejection for `$` and dotted NoSQL operator keys |
+| Security Misconfiguration | `helmet`, CORS origin config, `.env.example`, and `FORCE_HTTPS` |
+| Cryptographic Failures | Secrets are stored in environment variables and HTTPS can be enforced behind a proxy |
+| File Upload Risks | Multer memory storage, 5 MB limit, and JPG/PNG/WEBP MIME allow-list |
+| Logging/Monitoring | Audit logs for project create/update/delete and admin moderation actions |
+| XSS | React text rendering plus server-side string length limits and trimming |
+
+## Security Testing Checklist
+
+| Test | Expected result |
+| --- | --- |
+| Call protected API without `Authorization` header | `401 Unauthorized` |
+| Student edits another student's project | `403 Forbidden` |
+| Send NoSQL operator payload such as `{ "$ne": "" }` | `400 Bad Request` |
+| Upload a non-image file as a project image | `400 Bad Request` |
+| Recruiter/Admin accesses student-only project edit route | Redirect or `403 Forbidden` |
