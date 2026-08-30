@@ -13,10 +13,10 @@ const getJwtPayload = (token) => {
   }
 };
 
-// Interceptor to attach the token if it exists in localStorage
+// Interceptor to attach the token if it exists in session storage.
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = window.sessionStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
       const csrfToken = getJwtPayload(token)?.csrfToken;
