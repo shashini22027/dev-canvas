@@ -58,7 +58,6 @@ function App() {
           }
         >
           <Route path="/" element={<HomePage />} />
-          <Route path="/upload" element={<CreateProjectPage />} />
           <Route
             path="/admin"
             element={
