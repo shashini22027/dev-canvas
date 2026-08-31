@@ -45,6 +45,11 @@ const useAuthStore = create((set) => ({
 
   resetAuth: () => {
     safeSessionStorage.removeItem('token');
+    try {
+      window.sessionStorage.clear();
+    } catch {
+      // Ignore storage access issues in restricted browser contexts.
+    }
     set({ user: null, token: null, isAuthenticated: false, loading: false });
   }
 }));

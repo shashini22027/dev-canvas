@@ -106,6 +106,15 @@ const createApiToken = (user) => jwt.sign(
     { expiresIn: '7d' }
 )
 
+export const buildAuthCallbackRedirectUrl = (token) => {
+    const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')
+    const callbackUrl = `${clientUrl}/auth/callback`
+
+    if (!token) return callbackUrl
+
+    return `${callbackUrl}?token=${encodeURIComponent(token)}`
+}
+
 export const getAuthTokenFromCookie = (req) => {
     return req?.cookies?.devcanvas_auth_token || undefined;
 }
@@ -166,6 +175,7 @@ export const startAsgardeoLogin = (req, res) => {
         redirect_uri: config.callbackUrl,
         scope: process.env.ASGARDEO_SCOPES || 'openid profile email',
         state,
+        prompt: 'login',
     })
 
     res.redirect(`${config.authorizeEndpoint}?${params.toString()}`)
@@ -264,7 +274,14 @@ export const handleAsgardeoCallback = async (req, res, next) => {
 
         const token = createApiToken(user)
         setAuthTokenCookie(res, token)
-        res.redirect(`${process.env.CLIENT_URL}/auth/callback`)
+        res.cookie('asgardeo_id_token', tokens.id_token, {
+            httpOnly: true,
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            path: '/',
+        })
+        res.redirect(buildAuthCallbackRedirectUrl(token))
     } catch (err) {
         console.error('Asgardeo callback failed:', err.message)
         return res.redirect(`${process.env.CLIENT_URL}/login?error=Failed to complete Asgardeo login`)
@@ -273,11 +290,23 @@ export const handleAsgardeoCallback = async (req, res, next) => {
 
 export const logoutFromAsgardeo = (req, res) => {
     clearAuthTokenCookie(res)
+    res.clearCookie('asgardeo_id_token', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+    })
+    res.clearCookie('asgardeo_oauth_state', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+    })
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
-    const redirectUrl = `${clientUrl.replace(/\/$/, '')}/login`
+    const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')
+    const localLoginUrl = `${clientUrl}/login`
 
-    res.redirect(redirectUrl)
+    return res.redirect(localLoginUrl)
 }
 
 export const handleGoogleCallback = (req, res) => {
@@ -290,7 +319,7 @@ export const handleGoogleCallback = (req, res) => {
 
     const token = createApiToken(user)
     setAuthTokenCookie(res, token)
-    res.redirect(`${process.env.CLIENT_URL}/auth/callback`)
+    res.redirect(buildAuthCallbackRedirectUrl(token))
 }
 
 export const selectRole = async (req, res, next) => {

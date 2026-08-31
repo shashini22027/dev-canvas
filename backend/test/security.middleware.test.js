@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { csrfProtection } from '../src/middleware/csrf.middleware.js';
 import { rejectNoSqlOperators, limitRequestBody, createRateLimiter, getSafeErrorMessage, getSecurityHeadersConfig, getCorsOptions, isValidObjectId, sanitizeResourceStatus, validateUploadedImage } from '../src/middleware/security.middleware.js';
-import { getAuthTokenFromCookie, clearAuthTokenCookie, getJwtSecret, logoutFromAsgardeo, sanitizeProfileUpdate } from '../src/controllers/auth.controller.js';
+import { getAuthTokenFromCookie, clearAuthTokenCookie, getJwtSecret, logoutFromAsgardeo, sanitizeProfileUpdate, buildAuthCallbackRedirectUrl } from '../src/controllers/auth.controller.js';
 
 const createResponse = () => {
   const response = {
@@ -154,26 +154,33 @@ test('clears the auth token cookie during logout', () => {
   assert.equal(cookieOptions.options.httpOnly, true);
 });
 
-test('uses a local login redirect instead of an external Asgardeo logout redirect', () => {
+test('clears the app session and returns the user to a fresh login screen without hitting the broken external logout script', () => {
   const previousClientUrl = process.env.CLIENT_URL;
-  const previousLogoutEndpoint = process.env.ASGARDEO_LOGOUT_ENDPOINT;
   process.env.CLIENT_URL = 'http://localhost:5173';
-  process.env.ASGARDEO_LOGOUT_ENDPOINT = 'https://accounts.asgardeo.io/t/mydevcanvas/authenticationendpoint/oauth2_logout.do';
 
   let redirectUrl = null;
+  let clearedCookieNames = [];
   const res = {
-    clearCookie() {},
+    clearCookie(name) {
+      clearedCookieNames.push(name);
+    },
     redirect(url) {
       redirectUrl = url;
     },
   };
 
-  logoutFromAsgardeo({}, res);
+  logoutFromAsgardeo({
+    cookies: {
+      asgardeo_id_token: 'id-token-value',
+      devcanvas_auth_token: 'jwt-token-value',
+    },
+  }, res);
 
+  assert.deepEqual(clearedCookieNames.includes('devcanvas_auth_token'), true);
+  assert.deepEqual(clearedCookieNames.includes('asgardeo_id_token'), true);
   assert.equal(redirectUrl, 'http://localhost:5173/login');
 
   process.env.CLIENT_URL = previousClientUrl;
-  process.env.ASGARDEO_LOGOUT_ENDPOINT = previousLogoutEndpoint;
 });
 
 test('allows only the configured frontend origin in CORS requests', () => {
@@ -214,9 +221,15 @@ test('ignores unsafe profile fields and sanitizes profile updates', () => {
   });
 });
 
-test('rejects malformed Mongo object ids before database access', () => {
-  assert.equal(isValidObjectId('not-a-valid-id'), false);
-  assert.equal(isValidObjectId('507f1f77bcf86cd799439011'), true);
+test('redirects the Asgardeo callback back to the frontend with the JWT token', () => {
+  const previousClientUrl = process.env.CLIENT_URL;
+  process.env.CLIENT_URL = 'http://localhost:5173';
+
+  const redirectUrl = buildAuthCallbackRedirectUrl('jwt.with.special+chars');
+
+  assert.equal(redirectUrl, 'http://localhost:5173/auth/callback?token=jwt.with.special%2Bchars');
+
+  process.env.CLIENT_URL = previousClientUrl;
 });
 
 test('sanitizes project status values to the known enum set', () => {

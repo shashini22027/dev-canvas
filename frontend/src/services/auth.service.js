@@ -85,7 +85,7 @@ export const authService = {
         toast.success('Logout successful! Redirecting to login...');
 
         window.setTimeout(() => {
-            window.location.href = '/login';
+            window.location.replace('/login');
         }, 1200);
 
         return true;
