@@ -2,11 +2,18 @@ import * as projectService from '../services/project.service.js';
 
 export const createProject = async (req, res, next) => {
   try {
+    if (!req.files?.coverImage?.[0]) {
+      return res.status(400).json({ message: 'Project cover image is required' });
+    }
+
     const project = await projectService.createProject(req.body, req.files, req.user);
     res.status(201).json(project);
   } catch (err) {
     if (err.message.includes('required') || err.message.includes('Invalid') || err.message.includes('Team member')) {
       return res.status(400).json({ message: err.message });
+    }
+    if (err.message.includes('Image upload') || err.message.includes('Cloudinary')) {
+      return res.status(500).json({ message: err.message });
     }
     return next(err);
   }

@@ -6,6 +6,16 @@ import { createProject } from '../api/project.api';
 
 const projectCategories = ['Web Application', 'Mobile Application', 'AI / Machine Learning', 'Data Science', 'IoT', 'Cyber Security', 'Other'];
 const projectTypes = ['Individual', 'Team Project'];
+const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+const maxImageSize = 5 * 1024 * 1024;
+const imageAccept = allowedImageTypes.join(',');
+
+const getImageValidationMessage = (file) => {
+  if (!file) return '';
+  if (!allowedImageTypes.includes(file.type)) return 'Only JPG, PNG, and WEBP images are allowed';
+  if (file.size > maxImageSize) return 'Images must be 5MB or smaller';
+  return '';
+};
 
 const animatedBgStyles = `
   @import url('https://fonts.googleapis.com/css?family=Exo:400,700');
@@ -103,15 +113,39 @@ export default function CreateProjectPage() {
   const handleCoverImage = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    const validationMessage = getImageValidationMessage(file);
+    if (validationMessage) {
+      toast.error(validationMessage);
+      e.target.value = '';
+      return;
+    }
     setCoverImage(file);
     setCoverPreview(URL.createObjectURL(file));
+    setErrors((prev) => ({ ...prev, coverImage: undefined }));
   };
 
   const handleExtraImages = (e) => {
     const files = Array.from(e.target.files);
-    const updatedImages = [...extraImages, ...files];
+    const validFiles = [];
+
+    for (const file of files) {
+      const validationMessage = getImageValidationMessage(file);
+      if (validationMessage) {
+        toast.error(`${file.name}: ${validationMessage}`);
+      } else {
+        validFiles.push(file);
+      }
+    }
+
+    const availableSlots = 8 - extraImages.length;
+    if (validFiles.length > availableSlots) {
+      toast.error('You can upload up to 8 gallery images');
+    }
+
+    const updatedImages = [...extraImages, ...validFiles.slice(0, availableSlots)];
     setExtraImages(updatedImages);
     setExtraPreviews(updatedImages.map((f) => URL.createObjectURL(f)));
+    e.target.value = '';
   };
 
   const removeExtraImage = (index) => {
@@ -200,7 +234,7 @@ export default function CreateProjectPage() {
                     </div>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept={imageAccept}
                       onChange={handleCoverImage}
                       className="hidden"
                     />
@@ -413,7 +447,7 @@ export default function CreateProjectPage() {
                         </svg>
                         <input
                           type="file"
-                          accept="image/*"
+                          accept={imageAccept}
                           multiple
                           onChange={handleExtraImages}
                           className="hidden"

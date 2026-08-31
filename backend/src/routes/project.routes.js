@@ -24,10 +24,6 @@ const upload = multer({
       return cb(new Error('Only JPG, PNG, and WEBP images are allowed'));
     }
 
-    if (!validateUploadedImage(file)) {
-      return cb(new Error('Uploaded image file is invalid or corrupted'));
-    }
-
     cb(null, true);
   },
 });
@@ -37,21 +33,39 @@ const projectUpload = upload.fields([
   { name: 'extraImages', maxCount: 10 },
 ]);
 
+const validateProjectImages = (req, res, next) => {
+  const uploadedFiles = [
+    ...(req.files?.coverImage || []),
+    ...(req.files?.extraImages || []),
+  ];
+
+  const invalidImage = uploadedFiles.find((file) => !validateUploadedImage(file));
+
+  if (invalidImage) {
+    return res.status(400).json({ message: 'Uploaded image file is invalid or corrupted' });
+  }
+
+  next();
+};
+
 const router = express.Router();
 
-router.post('/', authMiddleware, roleMiddleware('STUDENT'), csrfProtection, auditLog('project.create'), projectUpload, createProject);
+router.post('/', authMiddleware, roleMiddleware('STUDENT'), csrfProtection, auditLog('project.create'), projectUpload, validateProjectImages, createProject);
 router.get('/', getProjects);
 router.get('/me', authMiddleware, roleMiddleware('STUDENT'), getMyProjects);
 router.get('/:id', getProjectById);
-router.put('/:id', authMiddleware, roleMiddleware('STUDENT'), csrfProtection, auditLog('project.update'), projectUpload, updateProject);
+router.put('/:id', authMiddleware, roleMiddleware('STUDENT'), csrfProtection, auditLog('project.update'), projectUpload, validateProjectImages, updateProject);
 router.delete('/:id', authMiddleware, roleMiddleware('STUDENT'), csrfProtection, auditLog('project.delete'), deleteProject);
 
 router.use((err, req, res, next) => {
-  if (err instanceof multer.MulterError || err.message.includes('images are allowed')) {
+  if (
+    err instanceof multer.MulterError
+    || err.message.includes('images are allowed')
+    || err.message.includes('invalid or corrupted')
+  ) {
     return res.status(400).json({ message: err.message });
   }
   next(err);
 });
 
 export default router;
-

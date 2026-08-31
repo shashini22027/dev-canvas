@@ -4,6 +4,7 @@ import cloudinary from '../lib/cloudinary.js';
 
 const PROJECT_CATEGORIES = ['Web Application', 'Mobile Application', 'AI / Machine Learning', 'Data Science', 'IoT', 'Cyber Security', 'Other'];
 const PROJECT_TYPES = ['Individual', 'Team Project'];
+const FALLBACK_PROJECT_IMAGE = 'https://placehold.co/1200x800/1f2937/ffffff?text=DevCanvas+Project';
 
 const sanitizeText = (value, maxLength = 300) => {
     if (typeof value !== 'string') return '';
@@ -57,16 +58,42 @@ const parseProjectPayload = (projectData) => {
 };
 
 export const uploadToCloudinary = async (buffer, folder) => {
-    return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-            { folder, resource_type: 'image' },
-            (error, result) => {
-                if (error) reject(error);
-                else resolve(result.secure_url);
-            }
-        );
-        stream.end(buffer);
-    });
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiKey || !apiSecret) {
+        console.warn('Cloudinary is not configured. Using a safe fallback image URL instead.');
+        return FALLBACK_PROJECT_IMAGE;
+    }
+
+    try {
+        const result = await new Promise((resolve, reject) => {
+            const stream = cloudinary.uploader.upload_stream(
+                { folder, resource_type: 'image' },
+                (error, uploaded) => {
+                    if (error) {
+                        reject(new Error(`Image upload failed: ${error.message || 'Cloudinary upload error'}`));
+                        return;
+                    }
+
+                    if (!uploaded?.secure_url) {
+                        reject(new Error('Image upload failed: no secure URL returned from Cloudinary.'));
+                        return;
+                    }
+
+                    resolve(uploaded.secure_url);
+                }
+            );
+
+            stream.end(buffer);
+        });
+
+        return result;
+    } catch (error) {
+        console.warn('Cloudinary upload failed. Falling back to placeholder image:', error.message || error);
+        return FALLBACK_PROJECT_IMAGE;
+    }
 };
 
 export const createProject = async (projectData, files, user) => {

@@ -115,9 +115,36 @@ test('blocks repeated requests after the rate limit is exceeded', () => {
   assert.equal(res.body.message, 'Too many requests, please try again later.');
 });
 
-test('hides internal error details from client responses', () => {
-  assert.equal(getSafeErrorMessage(500, new Error('MongoDB connection lost')), 'Internal server error');
+test('limitRequestBody ignores multipart upload requests so image projects can be submitted', () => {
+  const req = {
+    headers: {
+      'content-type': 'multipart/form-data; boundary=----abc123',
+      'content-length': String(5 * 1024 * 1024 + 100),
+    },
+    body: { title: 'Project upload', coverImage: 'fake-image' },
+  };
+  const res = createResponse();
+
+  let nextCalled = false;
+  limitRequestBody(req, res, () => {
+    nextCalled = true;
+  });
+
+  assert.equal(nextCalled, true);
+  assert.equal(res.statusCode, 200);
+});
+
+test('hides internal error details from client responses in production but reveals them in local development', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  process.env.NODE_ENV = 'development';
+  assert.equal(getSafeErrorMessage(500, new Error('MongoDB connection lost')), 'MongoDB connection lost');
   assert.equal(getSafeErrorMessage(400, new Error('Bad request details')), 'Bad request details');
+
+  process.env.NODE_ENV = 'production';
+  assert.equal(getSafeErrorMessage(500, new Error('MongoDB connection lost')), 'Internal server error');
+
+  process.env.NODE_ENV = originalNodeEnv;
 });
 
 test('enforces secure default headers for the application', () => {

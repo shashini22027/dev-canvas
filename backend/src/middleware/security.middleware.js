@@ -40,6 +40,12 @@ export const createRateLimiter = ({ windowMs = 15 * 60 * 1000, max = 100, messag
 };
 
 export const limitRequestBody = (req, res, next) => {
+  const contentType = req.headers['content-type'] || '';
+
+  if (contentType.includes('multipart/form-data')) {
+    return next();
+  }
+
   const lengthHeader = req.headers['content-length'];
   const declaredLength = Number.parseInt(lengthHeader ?? '', 10);
 
@@ -77,8 +83,9 @@ export const requireHttps = (req, res, next) => {
 
 export const getSafeErrorMessage = (statusCode, error) => {
   const message = error?.message || 'Something went wrong';
+  const isProduction = process.env.NODE_ENV === 'production';
 
-  if (statusCode >= 500) {
+  if (statusCode >= 500 && isProduction) {
     return 'Internal server error';
   }
 
