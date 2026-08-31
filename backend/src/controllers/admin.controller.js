@@ -23,6 +23,9 @@ export const deleteProject = async (req, res, next) => {
         await adminService.removeProject(req.params.id);
         return res.status(200).json({ success: true, message: 'Project deleted successfully' });
     } catch (err) {
+        if (err.message === 'Invalid project id') {
+            return res.status(400).json({ success: false, message: 'Invalid project id' });
+        }
         if (err.message === 'Project not found') {
             return res.status(404).json({ success: false, message: 'Project not found' });
         }
@@ -35,6 +38,9 @@ export const updateProjectStatus = async (req, res, next) => {
         const project = await adminService.updateProjectStatus(req.params.id, req.body.status);
         return res.status(200).json({ success: true, message: 'Project status updated successfully', data: project });
     } catch (err) {
+        if (err.message === 'Invalid project id') {
+            return res.status(400).json({ success: false, message: 'Invalid project id' });
+        }
         if (err.message === 'Project not found') {
             return res.status(404).json({ success: false, message: 'Project not found' });
         }
@@ -50,6 +56,9 @@ export const toggleUserStatus = async (req, res, next) => {
         const user = await adminService.toggleUserStatus(req.params.id, req.user.id);
         return res.status(200).json({ success: true, message: `User ${user.isDisabled ? 'disabled' : 'enabled'} successfully`, data: user });
     } catch (err) {
+        if (err.message === 'Invalid user id' || err.message === 'Invalid authenticated user id') {
+            return res.status(400).json({ success: false, message: err.message });
+        }
         if (err.message === 'User not found') {
             return res.status(404).json({ success: false, message: 'User not found' });
         }

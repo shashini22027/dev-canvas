@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import Project from '../models/Project.js';
-import { sanitizeResourceStatus } from '../middleware/security.middleware.js';
+import { isValidObjectId, sanitizeResourceStatus } from '../middleware/security.middleware.js';
 
 export const fetchAllUsers = async () => {
     return await User.find({});
@@ -11,6 +11,10 @@ export const fetchAllProjects = async () => {
 };
 
 export const removeProject = async (projectId) => {
+    if (!isValidObjectId(projectId)) {
+        throw new Error('Invalid project id');
+    }
+
     const project = await Project.findByIdAndDelete(projectId);
     if (!project) {
         throw new Error('Project not found');
@@ -19,6 +23,10 @@ export const removeProject = async (projectId) => {
 };
 
 export const updateProjectStatus = async (projectId, status) => {
+    if (!isValidObjectId(projectId)) {
+        throw new Error('Invalid project id');
+    }
+
     const sanitizedStatus = sanitizeResourceStatus(status, ['PENDING', 'APPROVED', 'REJECTED']);
     if (!sanitizedStatus) {
         throw new Error('Invalid project status');
@@ -38,7 +46,15 @@ export const updateProjectStatus = async (projectId, status) => {
 };
 
 export const toggleUserStatus = async (userId, requestUserId) => {
-    const user = await User.findById(userId);
+    if (!isValidObjectId(userId)) {
+        throw new Error('Invalid user id');
+    }
+
+    if (!isValidObjectId(requestUserId)) {
+        throw new Error('Invalid authenticated user id');
+    }
+
+    const user = await User.findById(userId).select('_id isDisabled');
     if (!user) {
         throw new Error('User not found');
     }
@@ -48,7 +64,9 @@ export const toggleUserStatus = async (userId, requestUserId) => {
         throw new Error('Cannot disable your own account');
     }
 
-    user.isDisabled = !user.isDisabled;
-    await user.save();
-    return user;
+    return await User.findByIdAndUpdate(
+        userId,
+        { isDisabled: !user.isDisabled },
+        { new: true, runValidators: false }
+    );
 };
